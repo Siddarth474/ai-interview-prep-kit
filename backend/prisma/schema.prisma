@@ -1,0 +1,179 @@
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum KitStatus {
+  CREATED
+  RESEARCHING
+  GENERATING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id           String @id @default(cuid())
+  username     String @unique
+  email        String @unique
+  passwordHash String
+
+  kits InterviewKit[]
+  //flashcardProgress FlashcardProgress[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InterviewKit {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  companyName String?
+  companyUrl  String
+
+  jobDescription String
+  daysAvailable  Int
+
+  status KitStatus @default(CREATED)
+
+  researchSources ResearchSource[]
+  requirements    Requirement[]
+  // companyBrief    CompanyBrief?
+  // roleBreakdown   RoleBreakdown?
+  questions       Question[]
+  // studySchedule StudySchedule? 
+  // flashcards      Flashcard[]
+  // studyDays       StudyDay[]
+  // generationRuns  GenerationRun[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+enum ResearchSourceType {
+  COMPANY_WEBSITE
+  INTERVIEW_DISCUSSION
+  OTHER
+}
+
+enum ResearchSourceStatus {
+  PENDING
+  FETCHED
+  FAILED
+  SKIPPED
+}
+
+model ResearchSource {
+  id String @id @default(cuid())
+
+  kitId String
+  kit   InterviewKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+
+  url        String
+  title      String?
+  content    String
+  status     ResearchSourceStatus
+  sourceType ResearchSourceType
+
+  chunks ResearchChunk[]
+
+  createdAt DateTime @default(now())
+
+  @@unique([kitId, url])
+  @@index([kitId])
+}
+
+model ResearchChunk {
+  id String @id @default(cuid())
+
+  researchSourceId String
+  researchSource   ResearchSource @relation(fields: [researchSourceId], references: [id], onDelete: Cascade)
+
+  content    String
+  chunkIndex Int
+
+  embedding Unsupported("vector(768)")   
+
+  createdAt DateTime @default(now())
+
+  @@index([researchSourceId])
+}
+
+enum RequirementImportance {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model Requirement {
+  id String @id @default(cuid())
+
+  kitId String
+  kit   InterviewKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+
+  text       String
+  topic      String
+  category   QuestionCategory
+  importance RequirementImportance @default(MEDIUM)
+
+  position Int
+
+  questions      Question[]
+  //scheduleTopics StudyScheduleTopic[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kitId])
+}
+
+enum QuestionCategory { 
+  TECHNICAL
+  BEHAVIORAL
+  ROLE_SPECIFIC
+  COMPANY
+  PROJECT
+  SYSTEM_DESIGN
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Question {
+  id String @id @default(cuid())
+
+  kitId String
+  kit   InterviewKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+
+  requirementId String?
+  requirement   Requirement? @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  category   QuestionCategory
+  question   String
+  guidance   String?
+  difficulty Difficulty       @default(MEDIUM)
+
+  position Int
+
+  generatedContent String?
+  isEdited         Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([kitId])
+}
+
+
