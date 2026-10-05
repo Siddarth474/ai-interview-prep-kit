@@ -3,6 +3,3 @@ node_modules
 .env
 
 /generated/prisma
-
-/src/modules/question
-/src/utils/questionCap.ts
