@@ -6,7 +6,7 @@ import { researchService } from "../research/research.service.js";
 export const generationService = {
   async generateKit(kitId: string) {
     // Step 1: extract requirements
-    //await requirementService.extractRequirements(kitId);
+    await requirementService.extractRequirements(kitId);
 
     // Step 2: research the company
     await researchService.researchCompany(kitId);

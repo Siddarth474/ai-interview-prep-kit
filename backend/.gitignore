@@ -4,7 +4,5 @@ node_modules
 
 /generated/prisma
 
-/src/modules/ai
-/src/modules/requirement 
 /src/modules/question
 /src/utils/questionCap.ts
