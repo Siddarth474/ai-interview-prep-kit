@@ -68,14 +68,14 @@ export const aiService = {
         count,
       });
 
-      console.log("This is questions", questions);
+      //console.log("This is questions", questions);
 
       const questionsWithTopic = questions.map((q) => ({
         ...q,
         topic: requirement.topic,
       }));
 
-      await questionService.saveQuestionsForKit(kitId, questionsWithTopic);
+      await questionService.saveQuestionsForKit(kitId, questionsWithTopic, requirement.id);
     }
   },
 };

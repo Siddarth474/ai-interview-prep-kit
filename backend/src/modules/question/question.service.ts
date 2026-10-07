@@ -11,10 +11,11 @@ interface QuestionInput {
 
 export const questionService = {
 
-    async saveQuestionsForKit(kitId: string, questions: QuestionInput[]) {
+    async saveQuestionsForKit(kitId: string, questions: QuestionInput[], requirementId: string) {
         await prisma.question.createMany({
             data: questions.map((q, index) => ({
                 kitId,
+                requirementId,
                 question: q.question,
                 guidance: q.guidance,
                 difficulty: q.difficulty,

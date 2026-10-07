@@ -48,7 +48,7 @@ model InterviewKit {
   // companyBrief    CompanyBrief?
   // roleBreakdown   RoleBreakdown?
   questions       Question[]
-  // studySchedule StudySchedule? 
+  studySchedule StudySchedule? 
   // flashcards      Flashcard[]
   // studyDays       StudyDay[]
   // generationRuns  GenerationRun[]
@@ -128,7 +128,7 @@ model Requirement {
   position Int
 
   questions      Question[]
-  //scheduleTopics StudyScheduleTopic[]
+  scheduleTopics StudyScheduleTopic[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -176,4 +176,48 @@ model Question {
   @@index([kitId])
 }
 
+model StudySchedule {
+  id String @id @default(cuid())
 
+  kitId String @unique
+  kit   InterviewKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+
+  totalDays Int
+
+  days StudyScheduleDay[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StudyScheduleDay {
+  id String @id @default(cuid())
+
+  scheduleId String
+  schedule   StudySchedule @relation(fields: [scheduleId], references: [id], onDelete: Cascade)
+
+  dayNumber Int
+
+  topics StudyScheduleTopic[]
+
+  @@unique([scheduleId, dayNumber])
+}
+
+model StudyScheduleTopic {
+  id String @id @default(cuid())
+
+  dayId String
+  day   StudyScheduleDay @relation(fields: [dayId], references: [id], onDelete: Cascade)
+
+  requirementId String
+  requirement   Requirement @relation(fields: [requirementId], references: [id], onDelete: Cascade)
+
+  topic String
+  importance RequirementImportance
+
+  estimatedMinutes Int?
+  completed Boolean @default(false)
+
+  @@index([dayId])
+  @@index([requirementId])
+}
