@@ -337,3 +337,31 @@ For each question return:
 - category: ROLE_SPECIFIC
 `;
 }
+
+export function generateFlashcardPrompt(
+  questions: string[],
+  answers: string[],
+) {
+  return `You are creating revision flashcards from an interview question bank.
+
+Given these questions and their answer outlines:
+
+${questions.map((q, i) => q + "\n" + answers[i]).join("\n")}
+
+Create concise flashcards for high-value concepts that candidates should quickly recall.
+
+Rules:
+- Front: maximum 12 words.
+- Back: maximum 30 words.
+- Don't create a card for every question.
+- Each card should test one concept.
+- Front should be a concise, natural question or recall prompt, not a topic heading.
+- Back should be concise and directly answer the front.
+- Avoid duplicating cards.
+- Don't introduce information not present in the source questions.
+
+For each flashcard return:
+- front: the question or recall prompt
+- back: the concise answer
+`;
+}

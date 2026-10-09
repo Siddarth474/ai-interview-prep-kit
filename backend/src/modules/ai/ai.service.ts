@@ -5,6 +5,7 @@ import {
   generateBehavioralQuestionsPrompt,
   generateSystemDesignQuestionsPrompt,
   generateRoleSpecificQuestionsPrompt,
+  generateFlashcardPrompt,
 } from "./prompt.js";
 import {
   requirementOutputSchema,
@@ -25,6 +26,7 @@ import {
   findRelevantChunks,
   type RetrievalResult,
 } from "../research/retrieval.service.js";
+import { flashcardOutputSchema } from "../flashcard/flashcard.schema.js";
 
 export interface Input {
   kitId: string;
@@ -36,7 +38,6 @@ export interface Input {
 }
 
 export const aiService = {
-
   async extractRequirements(
     jobDescription: string,
   ): Promise<RequirementOutput["requirements"]> {
@@ -59,7 +60,7 @@ export const aiService = {
       const key = `${requirement.importance}_${requirement.category}`;
       const count = budgetMap.get(key) || 1;
 
-      const questions = await generateQuestionsForRequirement({ 
+      const questions = await generateQuestionsForRequirement({
         kitId: kitId,
         requirement: requirement.text,
         topic: requirement.topic,
@@ -75,8 +76,26 @@ export const aiService = {
         topic: requirement.topic,
       }));
 
-      await questionService.saveQuestionsForKit(kitId, questionsWithTopic, requirement.id);
+      await questionService.saveQuestionsForKit(
+        kitId,
+        questionsWithTopic,
+        requirement.id,
+      );
     }
+  },
+
+  async generateFlashcardsForKit(
+    questions: { question: string; guidance: string }[],
+  ) {
+    const questionText = questions.map((q) => q.question);
+    const answers = questions.map((q) => q.guidance);
+    
+    const result = await geminiProvider.generateStructuredContent(
+      generateFlashcardPrompt(questionText, answers), 
+      flashcardOutputSchema,
+    );
+
+    return result.flashcards; 
   },
 };
 

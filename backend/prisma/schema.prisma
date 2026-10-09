@@ -49,9 +49,7 @@ model InterviewKit {
   // roleBreakdown   RoleBreakdown?
   questions       Question[]
   studySchedule StudySchedule? 
-  // flashcards      Flashcard[]
-  // studyDays       StudyDay[]
-  // generationRuns  GenerationRun[]
+  flashcards      Flashcard[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -170,6 +168,8 @@ model Question {
   generatedContent String?
   isEdited         Boolean @default(false)
 
+  flashcards Flashcard[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -220,4 +220,47 @@ model StudyScheduleTopic {
 
   @@index([dayId])
   @@index([requirementId])
+}
+
+model Flashcard {
+  id String @id @default(cuid())
+
+  kitId String
+  kit   InterviewKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+
+  sourceQuestionId String? 
+  sourceQuestion   Question? @relation(fields: [sourceQuestionId], references: [id], onDelete: SetNull)
+
+  front String
+  back  String
+
+  position Int
+
+  isUserModified Boolean @default(false)
+
+  progress FlashcardProgress?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum FlashcardStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  MASTERED
+}
+
+model FlashcardProgress {
+  id String @id @default(cuid())
+
+  flashcardId String @unique
+  flashcard   Flashcard @relation(fields: [flashcardId], references: [id], onDelete: Cascade)
+
+  status FlashcardStatus @default(NOT_STARTED)
+
+  lastReviewedAt DateTime?
+  reviewCount    Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

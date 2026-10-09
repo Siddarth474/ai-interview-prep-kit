@@ -32,4 +32,6 @@ export const requirementOutputSchema = z.object({
     .describe("List of extracted requirements from the job description"),
 });
 
+export type Requirement = z.infer<typeof requirementItemSchema>;
 export type RequirementOutput = z.infer<typeof requirementOutputSchema>;
+

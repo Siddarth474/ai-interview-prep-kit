@@ -10,15 +10,12 @@ export const requirementService = {
         jobDescription: true,
       },
     });
-
     if (!kit) {
       throw new Error("Interview kit not found");
     }
-
     const requirements = await aiService.extractRequirements(
       kit.jobDescription,
     );
-
     // save requirements
     await prisma.requirement.createMany({
       data: requirements.map((requirement, index) => ({
@@ -30,9 +27,8 @@ export const requirementService = {
         position: index,
       })),
     });
-
     //console.log("Requirements extracted successfully: ", requirements);
-
     return requirements;
   },
 };
+

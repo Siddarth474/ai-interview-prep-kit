@@ -1,4 +1,4 @@
-import { prisma } from "../../lib/prisma.js";
+import { prisma } from "../../lib/prisma.js"
 
 type Importance = "HIGH" | "MEDIUM" | "LOW";
 
@@ -55,7 +55,7 @@ export const studyScheduleService = {
       kit?.daysAvailable!,
     );
 
-    console.log("Schedule: ", JSON.stringify(schedule, null, 2));
+    //console.log("Schedule: ", JSON.stringify(schedule, null, 2));
 
     await prisma.$transaction(async (tx) => {
       const studySchedule = await tx.studySchedule.create({
@@ -87,7 +87,7 @@ export const studyScheduleService = {
       }
     });
   },
-  
+
 };
 
 function generateStudySchedule(
