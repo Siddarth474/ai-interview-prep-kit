@@ -9,6 +9,7 @@ import {
 } from "./prompt.js";
 import {
   requirementOutputSchema,
+  type Requirement,
   type RequirementOutput,
 } from "../requirement/requirement.schema.js";
 import {
@@ -60,7 +61,7 @@ export const aiService = {
       const key = `${requirement.importance}_${requirement.category}`;
       const count = budgetMap.get(key) || 1;
 
-      const questions = await generateQuestionsForRequirement({
+      const questions = await aiService.generateQuestionsForRequirement({
         kitId: kitId,
         requirement: requirement.text,
         topic: requirement.topic,
@@ -84,52 +85,54 @@ export const aiService = {
     }
   },
 
+  async generateQuestionsForRequirement(input: Input) {
+    // Retrieve relevant company research chunks for this requirement
+    const query = `${input.topic}: ${input.text}`;
+    const retrievedChunks = await findRelevantChunks(input.kitId, query);
+    const companyContext = formatContextForPrompt(retrievedChunks);
+
+    if (companyContext) {
+      console.log(
+        `[RAG] Found ${retrievedChunks.length} relevant chunks for "${input.topic}"`,
+      );
+    } else {
+      console.log(
+        `[RAG] No relevant company context found for "${input.topic}"`,
+      );
+    }
+
+    switch (input.category) {
+      case QuestionCategory.TECHNICAL:
+        return generateTechnicalQuestions(input, companyContext);
+
+      case QuestionCategory.BEHAVIORAL:
+        return generateBehavioralQuestions(input, companyContext);
+
+      case QuestionCategory.SYSTEM_DESIGN:
+        return generateSystemDesignQuestions(input, companyContext);
+
+      case QuestionCategory.ROLE_SPECIFIC:
+        return generateRoleSpecificQuestions(input, companyContext);
+
+      default:
+        throw new Error(`Unsupported question category: ${input.category}`);
+    }
+  },
+
   async generateFlashcardsForKit(
     questions: { question: string; guidance: string }[],
   ) {
     const questionText = questions.map((q) => q.question);
     const answers = questions.map((q) => q.guidance);
-    
+
     const result = await geminiProvider.generateStructuredContent(
-      generateFlashcardPrompt(questionText, answers), 
+      generateFlashcardPrompt(questionText, answers),
       flashcardOutputSchema,
     );
 
-    return result.flashcards; 
+    return result.flashcards;
   },
 };
-
-async function generateQuestionsForRequirement(input: Input) {
-  // Retrieve relevant company research chunks for this requirement
-  const query = `${input.topic}: ${input.text}`;
-  const retrievedChunks = await findRelevantChunks(input.kitId, query);
-  const companyContext = formatContextForPrompt(retrievedChunks);
-
-  if (companyContext) {
-    console.log(
-      `[RAG] Found ${retrievedChunks.length} relevant chunks for "${input.topic}"`,
-    );
-  } else {
-    console.log(`[RAG] No relevant company context found for "${input.topic}"`);
-  }
-
-  switch (input.category) {
-    case QuestionCategory.TECHNICAL:
-      return generateTechnicalQuestions(input, companyContext);
-
-    case QuestionCategory.BEHAVIORAL:
-      return generateBehavioralQuestions(input, companyContext);
-
-    case QuestionCategory.SYSTEM_DESIGN:
-      return generateSystemDesignQuestions(input, companyContext);
-
-    case QuestionCategory.ROLE_SPECIFIC:
-      return generateRoleSpecificQuestions(input, companyContext);
-
-    default:
-      throw new Error(`Unsupported question category: ${input.category}`);
-  }
-}
 
 function formatContextForPrompt(chunks: RetrievalResult[]): string | undefined {
   if (chunks.length === 0) return undefined;

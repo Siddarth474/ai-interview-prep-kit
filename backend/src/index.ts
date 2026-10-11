@@ -1,6 +1,7 @@
 import express, { type Request, type Response } from "express";
 import { authRouter } from "./modules/auth/auth.route.js";
 import { kitRouter } from "./modules/interviewKit/interviewkit.route.js";
+import { questionRouter } from "./modules/question/question.route.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import "./worker/worker.js";
 
@@ -15,6 +16,7 @@ app.get("/", (req: Request, res: Response) => {
 
 app.use("/api/auth", authRouter);
 app.use("/api/kits", kitRouter);
+app.use("/api/kits/:kitId/questions", questionRouter);
 
 app.use(errorHandler);
 

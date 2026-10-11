@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { createKitSchema } from "./interviewkit.schema.js";
 import { ApiError } from "../../utils/ApiError.js";
+import { ApiResponse } from "../../utils/ApiResponse.js";
 import { interviewKitService } from "./interviewkit.service.js";
 
 export const InterviewKitHandler = {
@@ -14,20 +15,16 @@ export const InterviewKitHandler = {
       const parseResult = createKitSchema.safeParse(req.body);
 
       if (!parseResult.success) {
-        return res.status(400).json({
-          success: false,
-          message: "Validation failed",
-          errors: parseResult.error.flatten().fieldErrors,
-        });
+        return res
+          .status(400)
+          .json(new ApiResponse(400, null, "Kit Creation Validation failed"));
       }
 
       const kit = await interviewKitService.createKit(userId, parseResult.data);
 
-      return res.status(201).json({
-        success: true,
-        message: "Interview kit created successfully",
-        data: kit,
-      });
+      return res
+        .status(201)
+        .json(new ApiResponse(201, kit, "Interview kit created successfully"));
     } catch (error) {
       next(error);
     }
