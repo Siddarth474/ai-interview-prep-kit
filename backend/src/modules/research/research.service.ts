@@ -1,10 +1,12 @@
 import {
+  KitStatus,
   ResearchSourceStatus,
   ResearchSourceType,
 } from "../../../generated/prisma/enums.js";
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { WebsiteCrawlerService } from "./website-crawl.service.js";
+import { interviewKitService } from "../interviewKit/interviewkit.service.js";
 
 export const researchService = {
   async researchCompany(kitId: string) {
@@ -43,6 +45,8 @@ export const researchService = {
         },
       });
     }
+
+    await interviewKitService.updateKitStatus(kitId, KitStatus.RESEARCHING);
 
     return pages;
   },

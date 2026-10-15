@@ -7,5 +7,7 @@ const kitRouter = Router();
 kitRouter.use(authenticate);
 
 kitRouter.post("/", InterviewKitHandler.createKitHandler);
+kitRouter.get("/", InterviewKitHandler.getUserKitsHandler);
+kitRouter.get("/:kitId", InterviewKitHandler.getKitByIdHandler);
 
 export { kitRouter };

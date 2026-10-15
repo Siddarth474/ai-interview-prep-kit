@@ -3,6 +3,13 @@ import { signupSchema, loginSchema } from "./auth.schema.js";
 import { AuthService } from "./auth.service.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+  sameSite: "lax" as const,
+  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (matches JWT expiration)
+};
+
 export const AuthHandler = {
   /**
    * Handle user registration
@@ -19,6 +26,8 @@ export const AuthHandler = {
       }
 
       const authData = await AuthService.signupUser(parseResult.data);
+
+      res.cookie("token", authData.token, COOKIE_OPTIONS);
 
       return res
         .status(201)
@@ -43,6 +52,8 @@ export const AuthHandler = {
       }
 
       const authData = await AuthService.loginUser(parseResult.data);
+
+      res.cookie("token", authData.token, COOKIE_OPTIONS);
 
       return res
         .status(200)

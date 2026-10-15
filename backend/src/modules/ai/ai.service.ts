@@ -20,7 +20,7 @@ import {
   type QuestionsOutput,
 } from "../question/question.schema.js";
 import { prisma } from "../../lib/prisma.js";
-import { QuestionCategory } from "../../../generated/prisma/enums.js";
+import { KitStatus, QuestionCategory } from "../../../generated/prisma/enums.js";
 import { calculateBudget } from "../../utils/questionCap.js";
 import { questionService } from "../question/question.service.js";
 import {
@@ -28,6 +28,7 @@ import {
   type RetrievalResult,
 } from "../research/retrieval.service.js";
 import { flashcardOutputSchema } from "../flashcard/flashcard.schema.js";
+import { interviewKitService } from "../interviewKit/interviewkit.service.js";
 
 export interface Input {
   kitId: string;
@@ -77,11 +78,20 @@ export const aiService = {
         topic: requirement.topic,
       }));
 
-      await questionService.saveQuestionsForKit(
-        kitId,
-        questionsWithTopic,
-        requirement.id,
-      );
+      await prisma.$transaction(async (tx) => {
+        await questionService.saveQuestionsForKit(
+          kitId,
+          questionsWithTopic,
+          requirement.id,
+          tx,
+        );
+
+        await interviewKitService.updateKitStatus(
+          kitId,
+          KitStatus.GENERATING,
+          tx,
+        );
+      });
     }
   },
 

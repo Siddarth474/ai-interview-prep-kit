@@ -24,8 +24,10 @@ export const questionService = {
     kitId: string,
     questions: QuestionInput[],
     requirementId: string,
+    tx?: any,
   ) {
-    await prisma.question.createMany({
+    const client = tx ?? prisma;
+    await client.question.createMany({
       data: questions.map((q, index) => ({
         kitId,
         requirementId,

@@ -1,5 +1,7 @@
+import { KitStatus } from "../../../generated/prisma/enums.js";
 import { prisma } from "../../lib/prisma.js";
 import { aiService } from "../ai/ai.service.js";
+import { interviewKitService } from "../interviewKit/interviewkit.service.js";
 
 export const flashcardService = {
   async generateFlashcardsForKit(kitId: string) {
@@ -27,6 +29,8 @@ export const flashcardService = {
           },
         }),
       ),
+
+      await interviewKitService.updateKitStatus(kitId, KitStatus.COMPLETED)
     );
   },
 };

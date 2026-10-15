@@ -25,22 +25,26 @@ export function authenticate(
   next: NextFunction,
 ): void {
   try {
-    const header = req.headers.authorization;
+    const authHeader = req.headers.authorization;
+    const tokenFromHeader =
+      authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : undefined;
 
-    if (!header || !header.startsWith("Bearer ")) {
-      throw new ApiError("Authentication required", 401, "NO_TOKEN");
-    }
-
-    const token = header.split(" ")[1];
+    const token = req.cookies?.token || tokenFromHeader;
 
     if (!token) {
       throw new ApiError("Authentication required", 401, "NO_TOKEN");
     }
+
     const decoded = jwt.verify(token, JWT_SECRET) as JwtPayload;
 
     req.user = decoded;
     next();
-  } catch {
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
     throw new ApiError("Invalid or expired token", 401, "INVALID_TOKEN");
   }
 } 

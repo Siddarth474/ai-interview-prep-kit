@@ -29,4 +29,43 @@ export const InterviewKitHandler = {
       next(error);
     }
   },
+
+  async getKitByIdHandler(
+    req: Request<{ kitId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new ApiError("Authentication required", 401, "NO_USER");
+      }
+
+      const { kitId } = req.params;
+      const kit = await interviewKitService.getKitById(kitId, userId);
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, kit, "Interview kit fetched successfully"));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async getUserKitsHandler(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new ApiError("Authentication required", 401, "NO_USER");
+      }
+
+      const kits = await interviewKitService.getUserKits(userId);
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, kits, "Interview kits fetched successfully"));
+    } catch (error) {
+      next(error);
+    }
+  },
 };

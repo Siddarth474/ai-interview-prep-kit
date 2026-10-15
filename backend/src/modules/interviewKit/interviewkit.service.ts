@@ -2,6 +2,7 @@ import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { researchQueue } from "../../config/queue.js";
 import type { CreateKitInput } from "./interviewkit.schema.js";
+import type { KitStatus } from "../../../generated/prisma/enums.js";
 
 export const interviewKitService = {
   async createKit(userId: string, data: CreateKitInput) {
@@ -27,8 +28,16 @@ export const interviewKitService = {
   },
 
   async getKitById(kitId: string, userId: string) {
+    if (!kitId) {
+      throw new ApiError("Kit ID is required", 400, "KIT_ID_REQUIRED");
+    }
+
     const kit = await prisma.interviewKit.findUnique({
       where: { id: kitId },
+      include: {
+        questions: true,
+        flashcards: true
+      }
     });
 
     if (!kit)
@@ -42,16 +51,39 @@ export const interviewKitService = {
       );
     }
 
-    return kit;
+    return {
+      ...kit,
+      questionsCount: kit.questions.length,
+      flashcards: kit.flashcards.length
+    };
   },
 
   async getUserKits(userId: string) {
     const kits = await prisma.interviewKit.findMany({
       where: { userId },
+      include: {
+        questions: {
+          select: {
+            id: true
+          }
+        },
+        flashcards: {
+          select: {
+            id: true
+          }
+        }
+      },
       orderBy: { createdAt: "desc" },
     });
 
-    return kits;
+    return {
+      kits: kits.map((kit) => ({
+        ...kit,
+        questionsCount: kit.questions.length,
+        flashcardsCount: kit.flashcards.length,
+      })),
+
+    };
   },
 
   async updateKit(
@@ -104,4 +136,12 @@ export const interviewKitService = {
 
     return { deleted: true };
   },
+
+  async updateKitStatus(kitId: string, status: KitStatus, tx?: any) {
+    const client = tx ?? prisma;
+    return await client.interviewKit.update({
+      where: { id: kitId },
+      data: { status },
+    });
+  }
 };

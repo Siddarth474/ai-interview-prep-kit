@@ -19,9 +19,7 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = Number(process.env.SALT_ROUNDS) || 12;
 
 export const AuthService = {
-  /**
-   * Register a new user with email, username, and password
-   */
+
   async signupUser(input: SignupInput): Promise<AuthResponse> {
     const normalizedEmail = input.email.trim().toLowerCase();
     const normalizedUsername = input.username.trim().toLowerCase();
