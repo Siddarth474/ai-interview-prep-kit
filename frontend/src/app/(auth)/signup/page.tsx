@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useSignup } from "../../../hooks/useSignup";
+import { useSignup } from "../../../hooks/use-signup";
 
 export default function SignupPage() {
   const {

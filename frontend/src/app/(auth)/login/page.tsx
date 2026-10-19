@@ -14,7 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { useLogin } from "../../../hooks/useLogin";
+import { useLogin } from "../../../hooks/use-login";
 
 export default function LoginPage() {
   const {

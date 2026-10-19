@@ -1,45 +1,26 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { kitService, type KitData } from "@/services/kit.service";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, RotateCw } from "lucide-react";
-import { KitStatsCards } from "./components/kit-stats-cards";
-import { KitRequirementsBreakdown } from "./components/kit-requirements-breakdown";
+import { KitStatsCards } from "@/components/overview/kit-stats-cards";
+import { KitRequirementsBreakdown } from "@/components/overview/kit-requirements-breakdown";
 import KitLoading from "./loading";
+import { useKitStore } from "@/hooks/use-kit-store";
 
-export default function KitDetailPage() {
+export default function KitOverviewPage() {
   const params = useParams();
-  const id = (params?.id as string) || "";
-  const [kit, setKit] = useState<KitData | null>(null);
-  const [loading, setLoading] = useState(true);
-
+  const id = (params?.id as string) || ""; 
+  const { kit, loading, fetchKit } = useKitStore();
+  
   useEffect(() => {
-    if (!id) return;
+    if (id) fetchKit(id);
+  }, [id, fetchKit]);
+  
+  if (loading && !kit) return <KitLoading />;
 
-    async function loadKit() {
-      try {
-        setLoading(true);
-        const res = await kitService.getKit(id);
-        if (res.success) {
-          setKit(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to fetch kit:", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    loadKit();
-  }, [id]);
-
-  if (loading) {
-    return <KitLoading />;
-  }
-
-  // Derive tech stack or subtitle
   const subtitle =
     (kit?.jobDescription && kit.jobDescription.length > 90
       ? kit.jobDescription.slice(0, 90) + "..."
@@ -48,7 +29,6 @@ export default function KitDetailPage() {
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7 w-full text-white">
-      {/* Top Header: Role Title with Back button + Regenerate Kit button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3 sm:gap-4">
           <Link

@@ -1,11 +1,11 @@
 "use client";
 
 import { useDashboardKits } from "@/hooks/use-dashboard-kits";
-import { DashboardTopNav } from "./components/dashboard-top-nav";
-import { KitsHeader } from "./components/kits-header";
-import { KitCard } from "./components/kit-card";
-import { CreateKitDialog } from "./components/create-kit-dialog";
-import { KitStatusDialog } from "./components/kit-status-dialog";
+import { DashboardTopNav } from "@/components/dashboard/dashboard-top-nav";
+import { KitsHeader } from "@/components/dashboard/kits-header";
+import { KitCard } from "@/components/dashboard/kit-card";
+import { CreateKitDialog } from "@/components/dashboard/create-kit-dialog";
+import { KitStatusDialog } from "@/components/dashboard/kit-status-dialog";
 
 export default function DashboardPage() {
   const {
