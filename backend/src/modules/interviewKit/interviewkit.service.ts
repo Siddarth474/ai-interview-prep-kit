@@ -3,6 +3,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import { researchQueue } from "../../config/queue.js";
 import type { CreateKitInput } from "./interviewkit.schema.js";
 import type { KitStatus } from "../../../generated/prisma/enums.js";
+import { studyScheduleService } from "../studySchedule/studySchedule.service.js";
 
 export const interviewKitService = {
   async createKit(userId: string, data: CreateKitInput) {
@@ -35,9 +36,52 @@ export const interviewKitService = {
     const kit = await prisma.interviewKit.findUnique({
       where: { id: kitId },
       include: {
-        questions: true,
-        flashcards: true
-      }
+        flashcards: {
+          orderBy: { position: "asc" },
+          include: {
+            progress: true,
+          },
+        },
+        requirements: {
+          orderBy: { position: "asc" },
+        },
+        questions: {
+          orderBy: { position: "asc" },
+          include: {
+            requirement: {
+              select: {
+                id: true,
+                topic: true,
+                text: true,
+                category: true,
+              },
+            },
+          },
+        },
+        studySchedule: {
+          include: {
+            days: {
+              orderBy: { dayNumber: "asc" },
+              include: {
+                topics: {
+                  include: {
+                    requirement: {
+                      select: {
+                        id: true,
+                        topic: true,
+                        category: true,
+                        questions: {
+                          select: { id: true },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
 
     if (!kit)
@@ -51,10 +95,45 @@ export const interviewKitService = {
       );
     }
 
+    let schedule = kit.studySchedule;
+    if (!schedule && kit.requirements.length > 0) {
+      try {
+        await studyScheduleService.createStudySchedule(kitId);
+        schedule = await prisma.studySchedule.findUnique({
+          where: { kitId },
+          include: {
+            days: {
+              orderBy: { dayNumber: "asc" },
+              include: {
+                topics: {
+                  include: {
+                    requirement: {
+                      select: {
+                        id: true,
+                        topic: true,
+                        category: true,
+                        questions: {
+                          select: { id: true },
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        });
+      } catch (err) {
+        console.error("Failed to auto-generate study schedule:", err);
+      }
+    }
+
     return {
       ...kit,
       questionsCount: kit.questions.length,
-      flashcards: kit.flashcards.length
+      flashcardsCount: kit.flashcards.length,
+      studySchedule: schedule,
+      studyPlan: schedule,
     };
   },
 
