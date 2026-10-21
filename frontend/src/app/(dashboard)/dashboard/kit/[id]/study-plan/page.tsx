@@ -1,88 +1,56 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, Calendar, Clock, CheckCircle2 } from "lucide-react";
-import { kitService, type KitData } from "@/services/kit.service";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useKitStore } from "@/hooks/use-kit-store";
+import { StudyPlanList } from "@/components/study-plan";
+import KitLoading from "../loading";
 
 export default function KitStudyPlanPage() {
   const params = useParams();
   const id = (params?.id as string) || "";
-  const [kit, setKit] = useState<KitData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { kit, loading, fetchKit } = useKitStore();
 
   useEffect(() => {
-    if (!id) return;
-
-    async function loadKit() {
-      try {
-        setLoading(true);
-        const res = await kitService.getKit(id);
-        if (res.success) {
-          setKit(res.data);
-        }
-      } catch (err) {
-        console.error("Failed to load study plan:", err);
-      } finally {
-        setLoading(false);
-      }
+    if (id) {
+      fetchKit(id);
     }
+  }, [id, fetchKit]);
 
-    loadKit();
-  }, [id]);
+  if (loading && !kit) {
+    return <KitLoading />;
+  }
 
-  const days = kit?.daysAvailable ?? 30;
+  const daysCount =
+    kit?.studySchedule?.totalDays ??
+    kit?.studySchedule?.days?.length ??
+    kit?.studyPlan?.totalDays ??
+    kit?.daysAvailable ??
+    30;
+
+  const scheduleDays =
+    kit?.studySchedule?.days ?? kit?.studyPlan?.days ?? [];
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7 w-full text-white">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-          <Link
-            href={`/dashboard/kit/${id}`}
-            className="size-9 sm:size-10 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors shrink-0 mt-0.5 sm:mt-0"
-            title="Back to Overview"
-            aria-label="Back to Overview"
-          >
-            <ArrowLeft className="size-4 sm:size-4.5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Study Plan
-            </h1>
-            <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-2xl leading-relaxed">
-              {kit?.role || "Full Stack Developer"} • {days}-Day tailored roadmap optimized for your timeline
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            {daysCount} Day Study Plan
+          </h1>
+          <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-2xl leading-relaxed">
+            A personalized study plan to help you cover all topics effectively.
+          </p>
         </div>
       </div>
 
-      {/* Main Content Placeholder Card */}
-      <Card className="rounded-2xl border border-white/10 bg-[#111414] shadow-lg p-6 sm:p-8">
-        <CardHeader className="p-0 mb-6">
-          <CardTitle className="text-base sm:text-lg font-semibold text-white flex items-center gap-2.5">
-            <Calendar className="size-5 text-white/70" />
-            <span>Timeline & Daily Milestones</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 mb-4">
-              <Clock className="size-6" />
-            </div>
-            <h3 className="text-base font-semibold text-white">{days}-Day Study Roadmap</h3>
-            <p className="text-xs sm:text-sm text-white/50 max-w-md mt-1 mb-5">
-              Structured daily modules designed to pace your prep from foundational concepts to mock interviews.
-            </p>
-            <div className="flex items-center gap-2 text-xs text-white/40">
-              <CheckCircle2 className="size-4 text-emerald-500/80" />
-              <span>Track completed days and mark milestones as you practice</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Study Plan List (no List/Calendar View buttons as requested) */}
+      <StudyPlanList
+        kitId={id}
+        days={scheduleDays}
+        createdAt={kit?.createdAt}
+      />
     </div>
   );
 }

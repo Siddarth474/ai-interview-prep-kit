@@ -7,6 +7,38 @@ export interface CreateKitPayload {
   daysAvailable: number;
 }
 
+export interface StudyScheduleTopic {
+  id?: string;
+  dayId?: string;
+  requirementId: string;
+  topic: string;
+  importance: "HIGH" | "MEDIUM" | "LOW";
+  estimatedMinutes?: number | null;
+  completed?: boolean;
+  requirement?: {
+    id: string;
+    topic: string;
+    category?: string;
+    questions?: { id: string }[];
+  };
+}
+
+export interface StudyScheduleDay {
+  id?: string;
+  scheduleId?: string;
+  dayNumber: number;
+  topics: StudyScheduleTopic[];
+}
+
+export interface StudySchedule {
+  id?: string;
+  kitId?: string;
+  totalDays: number;
+  days: StudyScheduleDay[];
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
 export interface KitData {
   id?: string;
   userId?: string;
@@ -26,6 +58,8 @@ export interface KitData {
   status?: string;
   role?: string;
   createdDate?: string;
+  studySchedule?: StudySchedule | null;
+  studyPlan?: StudySchedule | null;
   [key: string]: any;
 }
 

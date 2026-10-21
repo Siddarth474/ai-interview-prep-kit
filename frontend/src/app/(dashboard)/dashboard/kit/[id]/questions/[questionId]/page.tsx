@@ -9,7 +9,6 @@ import {
   RotateCw,
   MoreVertical,
   Copy,
-  Check,
   Trash2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -252,13 +251,6 @@ export default function QuestionDetailPage() {
                 <span>Copy Question</span>
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-white/10 my-1" />
-              <DropdownMenuItem
-                onClick={() => setIsDeleteDialogOpen(true)}
-                className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors"
-              >
-                <Trash2 className="size-3.5" />
-                <span>Delete Question</span>
-              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

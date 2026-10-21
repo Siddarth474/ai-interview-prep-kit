@@ -6,9 +6,7 @@ import { useParams, usePathname } from "next/navigation";
 import {
   Book,
   Calendar,
-  CheckCircle2,
   FileText,
-  Layers,
   LayoutDashboard,
   Search,
   Settings,
@@ -44,7 +42,6 @@ const getKitNavItems = (kitId: string) => [
   { title: "Interview Questions", url: `/dashboard/kit/${kitId}/questions`, icon: Search },
   { title: "Flashcards", url: `/dashboard/kit/${kitId}/flashcards`, icon: SquareStack },
   { title: "Study Plan", url: `/dashboard/kit/${kitId}/study-plan`, icon: Calendar },
-  { title: "Progress", url: `/dashboard/kit/${kitId}/progress`, icon: CheckCircle2 },
   { title: "Settings", url: `/dashboard/kit/${kitId}/settings`, icon: Settings },
 ];
 

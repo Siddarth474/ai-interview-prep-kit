@@ -2,84 +2,70 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
-import { ArrowLeft, SquareStack, Layers, Sparkles } from "lucide-react";
-import { kitService, type KitData } from "@/services/kit.service";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { RotateCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { useKitStore } from "@/hooks/use-kit-store";
+import { FlashcardGrid } from "@/components/flashcard";
 import KitLoading from "../loading";
+import { cn } from "@/lib/utils";
 
 export default function KitFlashcardsPage() {
   const params = useParams();
   const id = (params?.id as string) || "";
   const { kit, loading, fetchKit } = useKitStore();
+  const [isRegenerating, setIsRegenerating] = useState(false);
 
   useEffect(() => {
-    if (id) fetchKit(id);
+    if (id) {
+      fetchKit(id);
+    }
   }, [id, fetchKit]);
 
-  if (loading && !kit) return <KitLoading />;
+  const handleRegenerate = async () => {
+    if (!id || isRegenerating) return;
+    try {
+      setIsRegenerating(true);
+      await fetchKit(id, true);
+    } finally {
+      setIsRegenerating(false);
+    }
+  };
 
-  const flashcardsCount =
-    kit?.flashcardsCount ??
-    (typeof kit?.flashcards === "number"
-      ? kit?.flashcards
-      : Array.isArray(kit?.flashcards)
-        ? kit?.flashcards.length
-        : 64);
+  if (loading && !kit) {
+    return <KitLoading />;
+  }
+
+  const flashcards = Array.isArray(kit?.flashcards) ? kit.flashcards : [];
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7 w-full text-white">
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="flex items-start sm:items-center gap-3 sm:gap-4">
-          <Link
-            href={`/dashboard/kit/${id}`}
-            className="size-9 sm:size-10 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors shrink-0 mt-0.5 sm:mt-0"
-            title="Back to Overview"
-            aria-label="Back to Overview"
-          >
-            <ArrowLeft className="size-4 sm:size-4.5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              Flashcards
-            </h1>
-            <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-2xl leading-relaxed">
-              {kit?.role || "Full Stack Developer"} • {flashcardsCount} rapid
-              revision cards for active recall
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            Flashcards
+          </h1>
+          <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-2xl leading-relaxed">
+            Quickly revise important concepts with AI-generated flashcards.
+          </p>
         </div>
+
+        <Button
+          variant="outline"
+          onClick={handleRegenerate}
+          disabled={isRegenerating}
+          className="h-10 px-4 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs sm:text-sm font-medium gap-2 shrink-0 transition-colors cursor-pointer self-start sm:self-auto"
+        >
+          <RotateCw
+            className={cn("size-3.5", isRegenerating && "animate-spin")}
+          />
+          <span>Regenerate</span>
+        </Button>
       </div>
 
-      {/* Main Content Placeholder Card */}
-      <Card className="rounded-2xl border border-white/10 bg-[#111414] shadow-lg p-6 sm:p-8">
-        <CardHeader className="p-0 mb-6">
-          <CardTitle className="text-base sm:text-lg font-semibold text-white flex items-center gap-2.5">
-            <Layers className="size-5 text-white/70" />
-            <span>Interactive Flashcard Deck</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <div className="size-12 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 mb-4">
-              <SquareStack className="size-6" />
-            </div>
-            <h3 className="text-base font-semibold text-white">
-              Revision Deck
-            </h3>
-            <p className="text-xs sm:text-sm text-white/50 max-w-md mt-1 mb-5">
-              Review key algorithms, system design trade-offs, and terminology
-              with spaced repetition.
-            </p>
-            <div className="flex items-center gap-2 text-xs text-white/40">
-              <Sparkles className="size-4 text-purple-400" />
-              <span>Flip cards to reveal answers and test confidence</span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Flashcards Grid (no filters) */}
+      <FlashcardGrid cards={flashcards} />
     </div>
   );
 }
+
