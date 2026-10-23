@@ -49,17 +49,14 @@ export interface KitData {
   createdAt?: string | Date;
   updatedAt?: string | Date;
   progress?: number;
-  questions?: any;
+  requirements?: any[];
   questionsCount?: number;
   flashcards?: any;
   flashcardsCount?: number;
   daysAvailable?: number;
   daysCount?: number;
   status?: string;
-  role?: string;
-  createdDate?: string;
   studySchedule?: StudySchedule | null;
-  studyPlan?: StudySchedule | null;
   [key: string]: any;
 }
 

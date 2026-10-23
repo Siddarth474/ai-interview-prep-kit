@@ -42,11 +42,30 @@ export function DeleteQuestionDialog({
       await deleteQuestion(kitId, questionId);
 
       // Optimistically update kit store by removing the deleted question
-      if (kit && Array.isArray(kit.questions)) {
-        const remaining = kit.questions.filter((q: any) => q.id !== questionId);
+      if (kit) {
+        const updatePayload: any = {};
+        let totalCount = kit.questionsCount ? kit.questionsCount - 1 : 0;
+
+        if (Array.isArray(kit.requirements)) {
+          updatePayload.requirements = kit.requirements.map((r: any) => {
+            const nextQuestions = Array.isArray(r.questions)
+              ? r.questions.filter((q: any) => q.id !== questionId)
+              : r.questions;
+            return { ...r, questions: nextQuestions };
+          });
+          totalCount = updatePayload.requirements.reduce(
+            (acc: number, r: any) => acc + (r.questions?.length || 0),
+            0
+          );
+        }
+
+        if (Array.isArray(kit.questions)) {
+          updatePayload.questions = kit.questions.filter((q: any) => q.id !== questionId);
+        }
+
         updateKit({
-          questions: remaining,
-          questionsCount: remaining.length,
+          ...updatePayload,
+          questionsCount: Math.max(0, totalCount),
         });
       }
 

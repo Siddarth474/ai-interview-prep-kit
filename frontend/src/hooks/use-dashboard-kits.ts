@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import type { KitData } from "@/services/kit.service";
 import { kitService } from "@/services/kit.service";
@@ -16,30 +16,36 @@ export function useDashboardKits() {
   const [activeKitId, setActiveKitId] = useState<string | null>(null);
   const [activeKit, setActiveKit] = useState<KitData | null>(null);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
+  const [serverError, setServerError] = useState<string | null>(null);
 
-  // Fetch all kits on mount
-  useEffect(() => {
-    const fetchKits = async () => {
-      try {
-        setIsLoading(true);
-        const res = await kitService.getKits();
-        if (res.success) {
-          const kitsList = Array.isArray(res.data?.kits)
-            ? res.data.kits
-            : Array.isArray(res.data)
-            ? res.data
-            : [];
-          setKits(kitsList);
-        }
-      } catch (error) {
-        console.error("Failed to fetch kits:", error);
-      } finally {
-        setIsLoading(false);
+  // Fetch all kits on mount or retry
+  const fetchKits = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setServerError(null);
+      const res = await kitService.getKits();
+      if (res.success) {
+        const kitsList = Array.isArray(res.data?.kits)
+          ? res.data.kits
+          : Array.isArray(res.data)
+          ? res.data
+          : [];
+        setKits(kitsList);
       }
-    };
-
-    fetchKits();
+    } catch (error: any) {
+      if (!error.response || error.response.status >= 500) {
+        setServerError("Backend server is currently unreachable. Please ensure the server is running.");
+      } else {
+        setServerError(error.response?.data?.message || "Failed to fetch kits.");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchKits();
+  }, [fetchKits]);
 
   const handleKitCreated = (newKit: any) => {
     setKits((prev) => [newKit, ...prev]);
@@ -132,6 +138,8 @@ export function useDashboardKits() {
   });
 
   return {
+    serverError,
+    refetch: fetchKits,
     searchQuery,
     setSearchQuery,
     isCreateOpen,

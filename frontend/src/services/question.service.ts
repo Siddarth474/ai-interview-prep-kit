@@ -3,6 +3,7 @@ import type { ApiResponse } from "@/types";
 
 export interface UpdateQuestionPayload {
     question?: string;
+    answer?: string;
     guidance?: string;
     difficulty?: "EASY" | "MEDIUM" | "HARD";
     category?: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC";
@@ -16,6 +17,11 @@ export const questionService = {
 
     async deleteQuestion(kitId: string, questionId: string): Promise<ApiResponse<any>> {
         const response = await api.delete<ApiResponse<any>>(`/kits/${kitId}/questions/${questionId}`);
+        return response.data;
+    },
+
+    async regenerateQuestions(kitId: string, category: string): Promise<ApiResponse<any>> {
+        const response = await api.post<ApiResponse<any>>(`/kits/${kitId}/questions/regenerate/${category}`);
         return response.data;
     }
 }

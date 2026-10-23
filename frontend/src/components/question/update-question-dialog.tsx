@@ -116,11 +116,27 @@ export function UpdateQuestionDialog({
       });
 
       // Update in kit store for instant optimistic UI update
-      if (kit && Array.isArray(kit.questions)) {
-        const nextQuestions = kit.questions.map((q: any) =>
-          q.id === questionId ? { ...q, ...updated, ...formData } : q
-        );
-        updateKit({ questions: nextQuestions });
+      if (kit) {
+        const updatePayload: any = {};
+
+        if (Array.isArray(kit.requirements)) {
+          updatePayload.requirements = kit.requirements.map((r: any) => ({
+            ...r,
+            questions: Array.isArray(r.questions)
+              ? r.questions.map((q: any) =>
+                  q.id === questionId ? { ...q, ...updated, ...formData } : q
+                )
+              : r.questions,
+          }));
+        }
+
+        if (Array.isArray(kit.questions)) {
+          updatePayload.questions = kit.questions.map((q: any) =>
+            q.id === questionId ? { ...q, ...updated, ...formData } : q
+          );
+        }
+
+        updateKit(updatePayload);
       }
 
       onSuccess?.({ ...question, ...updated, ...formData });

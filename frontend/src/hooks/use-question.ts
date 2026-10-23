@@ -54,9 +54,31 @@ export function useQuestion() {
     }
   };
 
+  const regenerateQuestions = async (kitId: string, category: string) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await questionService.regenerateQuestions(kitId, category);
+      if (!res.success) {
+        throw new Error(res.message || "Failed to regenerate questions");
+      }
+      return res.data;
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to regenerate questions";
+      setError(message);
+      throw new Error(message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return {
     updateQuestion,
     deleteQuestion,
+    regenerateQuestions,
     isLoading,
     error,
     setError,
