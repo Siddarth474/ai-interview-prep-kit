@@ -58,6 +58,11 @@ export const studyScheduleService = {
     //console.log("Schedule: ", JSON.stringify(schedule, null, 2));
 
     await prisma.$transaction(async (tx) => {
+      // Remove any existing schedule for this kit to ensure idempotency
+      await tx.studySchedule.deleteMany({
+        where: { kitId },
+      });
+
       const studySchedule = await tx.studySchedule.create({
         data: {
           kitId: kitId,

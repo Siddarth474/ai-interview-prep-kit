@@ -7,6 +7,7 @@ import {
 function buildQuestionsSchema(category: QuestionCategory) {
   const questionSchema = z.object({
     question: z.string().describe("A clear, specific interview question"),
+    answer: z.string().describe("The answer to the question"),
     guidance: z
       .string()
       .describe(
@@ -25,6 +26,7 @@ function buildQuestionsSchema(category: QuestionCategory) {
 
 export const createQuestionSchema = z.object({
   question: z.string().min(1, "Question text is required"),
+  answer: z.string().min(1, "Answer text is required"),
   guidance: z.string().optional(),
   category: z.enum(QuestionCategory, {
     message: "Invalid question category",
@@ -40,6 +42,7 @@ export const createQuestionSchema = z.object({
 export const updateQuestionSchema = z
   .object({
     question: z.string().min(1, "Question text cannot be empty"),
+    answer: z.string().min(1, "Answer text cannot be empty"),
     guidance: z.string().nullable(),
     category: z.enum(QuestionCategory, {
       message: "Invalid question category",

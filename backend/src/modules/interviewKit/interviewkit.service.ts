@@ -44,17 +44,9 @@ export const interviewKitService = {
         },
         requirements: {
           orderBy: { position: "asc" },
-        },
-        questions: {
-          orderBy: { position: "asc" },
           include: {
-            requirement: {
-              select: {
-                id: true,
-                topic: true,
-                text: true,
-                category: true,
-              },
+            questions: {
+              orderBy: { position: "asc" },
             },
           },
         },
@@ -128,9 +120,14 @@ export const interviewKitService = {
       }
     }
 
+    const totalQuestions = kit.requirements.reduce(
+      (acc, r) => acc + (r.questions?.length || 0),
+      0,
+    );
+
     return {
       ...kit,
-      questionsCount: kit.questions.length,
+      questionsCount: totalQuestions,
       flashcardsCount: kit.flashcards.length,
       studySchedule: schedule,
       studyPlan: schedule,

@@ -160,6 +160,7 @@ model Question {
 
   category   QuestionCategory
   question   String
+  answer     String
   guidance   String?
   difficulty Difficulty       @default(MEDIUM)
 

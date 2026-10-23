@@ -33,3 +33,12 @@ export const updateFlashcardSchema = z
   });
 
 export type UpdateFlashcardInput = z.infer<typeof updateFlashcardSchema>;
+
+export const reviewFlashcardSchema = z.object({
+  status: z.enum([FlashcardStatus.IN_PROGRESS, FlashcardStatus.MASTERED], {
+    message: "Status must be either IN_PROGRESS or MASTERED",
+  }),
+});
+
+export type ReviewFlashcardInput = z.infer<typeof reviewFlashcardSchema>;
+

@@ -5,6 +5,7 @@ import { flashcardService } from "./flashcard.service.js";
 import {
   createFlashcardSchema,
   updateFlashcardSchema,
+  reviewFlashcardSchema,
 } from "./flashcard.schema.js";
 
 export const flashcardHandler = {
@@ -99,6 +100,49 @@ export const flashcardHandler = {
       return res
         .status(200)
         .json(new ApiResponse(200, null, "Flashcard deleted successfully"));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async reviewFlashcardHandler(
+    req: Request<{ kitId: string; flashcardId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new ApiError("Authentication required", 401, "NO_USER");
+      }
+
+      const { kitId, flashcardId } = req.params;
+
+      const parseResult = reviewFlashcardSchema.safeParse(req.body);
+      if (!parseResult.success) {
+        return res
+          .status(400)
+          .json(
+            new ApiResponse(400, null, "Flashcard Review Validation failed"),
+          );
+      }
+
+      const result = await flashcardService.reviewFlashcard(
+        kitId,
+        flashcardId,
+        userId,
+        parseResult.data.status,
+      );
+
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            result,
+            "Flashcard review recorded successfully",
+          ),
+        );
     } catch (error) {
       next(error);
     }

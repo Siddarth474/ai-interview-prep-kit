@@ -107,7 +107,7 @@ export const AuthService = {
 
     // Edge case: User does not exist
     if (!user) {
-      throw new ApiError("Invalid email/username or password", 401, "INVALID_CREDENTIALS");
+      throw new ApiError("Email Not Found", 401, "EMAIL_NOT_FOUND");
     }
 
     // Compare password hash
@@ -116,11 +116,11 @@ export const AuthService = {
       user.passwordHash,
     );
     if (!isPasswordValid) {
-      throw new ApiError("Invalid email/username or password", 401, "INVALID_CREDENTIALS");
+      throw new ApiError("Invalid password", 401, "INVALID_PASSWORD");
     }
 
     // Generate JWT
-    const token = jwt.sign(
+    const token = jwt.sign( 
       {
         userId: user.id,
         email: user.email,

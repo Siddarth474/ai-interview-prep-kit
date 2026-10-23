@@ -9,6 +9,7 @@ flashcardRouter.use(authenticate);
 flashcardRouter
   .post("/", flashcardHandler.createFlashcardHandler)
   .patch("/:flashcardId", flashcardHandler.updateFlashcardHandler)
-  .delete("/:flashcardId", flashcardHandler.deleteFlashcardHandler);
+  .delete("/:flashcardId", flashcardHandler.deleteFlashcardHandler)
+  .post("/:flashcardId/review", flashcardHandler.reviewFlashcardHandler);
 
 export { flashcardRouter };

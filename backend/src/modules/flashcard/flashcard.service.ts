@@ -1,4 +1,4 @@
-import { KitStatus } from "../../../generated/prisma/enums.js";
+import { KitStatus, FlashcardStatus } from "../../../generated/prisma/enums.js";
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { aiService } from "../ai/ai.service.js";
@@ -20,9 +20,14 @@ export const flashcardService = {
     );
     console.log("Flashcards: ", flashcards);
 
-    await prisma.$transaction([
-      ...flashcards.map((f, index) =>
-        prisma.flashcard.create({
+    await prisma.$transaction(async (tx) => {
+      // Remove any existing flashcards for this kit if retrying
+      await tx.flashcard.deleteMany({
+        where: { kitId },
+      });
+
+      for (const [index, f] of flashcards.entries()) {
+        await tx.flashcard.create({
           data: {
             front: f.front,
             back: f.back,
@@ -32,10 +37,11 @@ export const flashcardService = {
               create: {},
             },
           },
-        }),
-      ),
-      await interviewKitService.updateKitStatus(kitId, KitStatus.COMPLETED)
-    ]);
+        });
+      }
+
+      await interviewKitService.updateKitStatus(kitId, KitStatus.COMPLETED, tx);
+    });
   },
 
   async createFlashcard(
@@ -177,6 +183,51 @@ export const flashcardService = {
     await prisma.flashcard.delete({
       where: { id: flashcardId },
     });
+  },
+
+  async reviewFlashcard(
+    kitId: string,
+    flashcardId: string,
+    userId: string,
+    status: FlashcardStatus,
+  ) {
+    await verifyKitOwnership(kitId, userId);
+
+    const existing = await prisma.flashcard.findUnique({
+      where: { id: flashcardId },
+    });
+
+    if (!existing) {
+      throw new ApiError("Flashcard not found", 404, "FLASHCARD_NOT_FOUND");
+    }
+
+    if (existing.kitId !== kitId) {
+      throw new ApiError(
+        "Flashcard does not belong to this kit",
+        403,
+        "FLASHCARD_KIT_MISMATCH",
+      );
+    }
+
+    const progress = await prisma.flashcardProgress.upsert({
+      where: { flashcardId },
+      create: {
+        flashcardId,
+        status,
+        reviewCount: 1,
+        lastReviewedAt: new Date(),
+      },
+      update: {
+        status,
+        reviewCount: { increment: 1 },
+        lastReviewedAt: new Date(),
+      },
+    });
+
+    return {
+      ...existing,
+      progress,
+    };
   },
 };
 

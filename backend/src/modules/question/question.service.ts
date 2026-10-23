@@ -15,6 +15,7 @@ interface QuestionInput {
   topic: string;
   category: QuestionCategory;
   question: string;
+  answer: string;
   guidance: string;
   difficulty: Difficulty;
 }
@@ -32,6 +33,7 @@ export const questionService = {
         kitId,
         requirementId,
         question: q.question,
+        answer: q.answer,
         guidance: q.guidance,
         difficulty: q.difficulty,
         category: q.category,
@@ -76,6 +78,7 @@ export const questionService = {
       data: {
         kitId,
         question: data.question,
+        answer: data.answer,
         guidance: data.guidance ?? null,
         category: data.category,
         difficulty: data.difficulty,
@@ -114,6 +117,7 @@ export const questionService = {
 
     const updateData: Record<string, unknown> = { isEdited: true };
     if (data.question !== undefined) updateData.question = data.question;
+    if (data.answer !== undefined) updateData.answer = data.answer;
     if (data.guidance !== undefined) updateData.guidance = data.guidance;
     if (data.category !== undefined) updateData.category = data.category;
     if (data.difficulty !== undefined) updateData.difficulty = data.difficulty;
@@ -293,6 +297,7 @@ export const questionService = {
         kitId,
         requirementId: q.requirementId,
         question: q.question,
+        answer: q.answer,
         guidance: q.guidance ?? null,
         difficulty: q.difficulty,
         category,

@@ -83,13 +83,19 @@ Rules:
 - Avoid questions whose answer is simply a definition when a more meaningful interview question can assess the same concept.
 - Do not assume technologies or experience that are not present in the requirement or company context.
 
-5. Guidance
+5. Answer
+- Provide a clear, comprehensive, and technically accurate answer to the question.
+- Cover core concepts thoroughly, including practical examples, trade-offs, or best practices where relevant.
+- The answer should be detailed and educational.
+
+6. Guidance
 - Guidance must contain 2-4 concise key points an interviewer should listen for.
-- Guidance should describe what a strong answer should demonstrate, not provide the complete answer.
+- Guidance should describe what a strong answer should demonstrate.
 - Guidance must be consistent with the question's difficulty.
 
 For each question return:
 - question: the interview question
+- answer: a comprehensive and accurate technical answer to the question
 - guidance: 2-4 key points the interviewer should look for
 - difficulty: EASY, MEDIUM, or HARD
 - category: TECHNICAL
@@ -157,15 +163,19 @@ Rules:
   - HARD: involves significant conflict, competing priorities, failure, difficult judgment, or multiple stakeholders.
 - Do not make a question artificially difficult just to satisfy the difficulty distribution.
 
-5. Guidance
+5. Answer
+- Provide an exemplary model response demonstrating the STAR method (Situation, Task, Action, Result).
+- Illustrate strong ownership, proactive problem-solving, collaboration, and measurable outcomes.
+
+6. Guidance
 - Guidance should describe what a strong answer should demonstrate.
 - Include 2-4 important positive signals.
 - Include relevant red flags to watch for.
 - Focus on the candidate's behavior, ownership, reasoning, communication, and outcome rather than judging personality.
-- Do not provide a model answer.
 
 For each question return:
 - question: the behavioral interview question
+- answer: an exemplary model answer demonstrating the STAR method and strong ownership
 - guidance: what a strong answer includes and red flags to watch for
 - difficulty: EASY, MEDIUM, or HARD
 - category: BEHAVIORAL
@@ -247,14 +257,18 @@ Rules:
   - HARD: large-scale or distributed system with significant scalability, reliability, consistency, or fault-tolerance challenges.
 - Do not make a question artificially difficult just to satisfy the difficulty distribution.
 
-5. Guidance
+5. Answer
+- Provide a structured, in-depth architectural solution to the design problem.
+- Outline key components, data flow, API design, storage/caching decisions, trade-offs, and scalability/reliability considerations.
+
+6. Guidance
 - Guidance should outline 3-5 important components, decisions, or trade-offs a strong answer should address.
 - Focus on architecture and reasoning rather than requiring one specific implementation.
 - Accept multiple valid architectural approaches when appropriate.
-- Do not provide a complete model solution.
 
 For each question return:
 - question: the system design question
+- answer: a structured and detailed architectural solution addressing the design problem and trade-offs
 - guidance: key components and trade-offs the answer should address
 - difficulty: EASY, MEDIUM, or HARD
 - category: SYSTEM_DESIGN
@@ -323,15 +337,19 @@ Rules:
   - HARD: involves complex trade-offs, ambiguity, failure scenarios, or significant responsibility.
 - Do not make a question artificially difficult just to satisfy the difficulty distribution.
 
-5. Guidance
+5. Answer
+- Provide a detailed, practical model answer demonstrating real-world domain expertise and best practices.
+- Cover realistic workflows, tools, troubleshooting, and decision-making criteria.
+
+6. Guidance
 - Guidance should explain what distinguishes a strong answer from a weak answer.
 - Include 2-4 important positive signals.
 - Include relevant red flags where appropriate.
 - Evaluate practical reasoning, ownership, technical/domain judgment, and awareness of trade-offs.
-- Do not provide a complete model answer.
 
 For each question return:
 - question: the role-specific interview question
+- answer: a detailed, practical model answer demonstrating domain expertise and best practices
 - guidance: what distinguishes a strong answer from a weak one
 - difficulty: EASY, MEDIUM, or HARD
 - category: ROLE_SPECIFIC
