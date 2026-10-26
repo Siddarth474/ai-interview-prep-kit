@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -9,14 +9,33 @@ import {
   Code2,
   Users,
   Briefcase,
+  Building2,
+  Cpu,
   ArrowRight,
   HelpCircle,
   FilterX,
   Layers,
+  Check,
+  X,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandSeparator,
+} from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useKitStore } from "@/hooks/use-kit-store";
 import KitLoading from "../loading";
@@ -26,7 +45,7 @@ interface QuestionItem {
   id?: string;
   position?: number;
   question: string;
-  category: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | string;
+  category: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | "COMPANY" | "SYSTEM_DESIGN" | string;
   difficulty: "EASY" | "MEDIUM" | "HARD" | string;
   guidance?: string;
   requirementId?: string | null;
@@ -47,103 +66,59 @@ interface RequirementCardItem {
   questions: QuestionItem[];
 }
 
-type CategoryFilter = "ALL" | "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC";
+export const CATEGORY_OPTIONS = [
+  {
+    value: "TECHNICAL",
+    label: "Technical",
+    icon: Code2,
+  },
+  {
+    value: "BEHAVIORAL",
+    label: "Behavioral",
+    icon: Users,
+  },
+  {
+    value: "ROLE_SPECIFIC",
+    label: "Role-specific",
+    icon: Briefcase,
+  },
+  {
+    value: "COMPANY",
+    label: "Company-wise",
+    icon: Building2,
+  },
+  {
+    value: "SYSTEM_DESIGN",
+    label: "System Design",
+    icon: Cpu,
+  },
+] as const;
+
+export function normalizeCategory(category?: string): string {
+  const upper = (category || "").toUpperCase().trim();
+  if (upper.includes("SYSTEM") || upper.includes("DESIGN")) return "SYSTEM_DESIGN";
+  if (upper.includes("COMPANY")) return "COMPANY";
+  if (upper.includes("ROLE")) return "ROLE_SPECIFIC";
+  if (upper.includes("BEHAVIOR")) return "BEHAVIORAL";
+  return "TECHNICAL";
+}
 
 function getTopicIcon(category?: string) {
-  const upper = (category || "").toUpperCase();
-  if (upper.includes("BEHAVIOR")) return Users;
-  if (upper.includes("ROLE")) return Briefcase;
+  const norm = normalizeCategory(category);
+  if (norm === "BEHAVIORAL") return Users;
+  if (norm === "ROLE_SPECIFIC") return Briefcase;
+  if (norm === "COMPANY") return Building2;
+  if (norm === "SYSTEM_DESIGN") return Cpu;
   return Code2;
 }
 
-export const SAMPLE_REQUIREMENTS: RequirementCardItem[] = [
-  {
-    id: "sample-req-1",
-    topic: "RESTful APIs & Backend Architecture",
-    text: "Designing idempotent, scalable REST APIs, handling error states, and managing distributed communication.",
-    category: "TECHNICAL",
-    importance: "HIGH",
-    questions: [
-      {
-        id: "sample-q-1",
-        position: 1,
-        question: "How do you handle idempotency in RESTful APIs, particularly for POST requests?",
-        category: "TECHNICAL",
-        difficulty: "HARD",
-      },
-      {
-        id: "sample-q-2",
-        position: 2,
-        question: "What is the difference between PUT and PATCH methods?",
-        category: "TECHNICAL",
-        difficulty: "MEDIUM",
-      },
-    ],
-  },
-  {
-    id: "sample-req-2",
-    topic: "Database Optimization & Schema Design",
-    text: "Indexing strategies, indexing performance on high-volume read/write tables, and relational normalization.",
-    category: "TECHNICAL",
-    importance: "HIGH",
-    questions: [
-      {
-        id: "sample-q-3",
-        position: 1,
-        question: "How do you optimize queries on large PostgreSQL tables?",
-        category: "TECHNICAL",
-        difficulty: "HARD",
-      },
-      {
-        id: "sample-q-4",
-        position: 2,
-        question: "Explain WHERE vs HAVING clause in SQL with aggregations.",
-        category: "TECHNICAL",
-        difficulty: "MEDIUM",
-      },
-    ],
-  },
-  {
-    id: "sample-req-3",
-    topic: "React & Next.js Frontend Development",
-    text: "Server-side rendering, client component patterns, memoization, and state synchronization.",
-    category: "TECHNICAL",
-    importance: "MEDIUM",
-    questions: [
-      {
-        id: "sample-q-5",
-        position: 1,
-        question: "How does the virtual DOM reconciliation work in React?",
-        category: "TECHNICAL",
-        difficulty: "MEDIUM",
-      },
-    ],
-  },
-  {
-    id: "sample-req-4",
-    topic: "Behavioral & Cross-Functional Collaboration",
-    text: "Conflict resolution, technical leadership, agile collaboration, and stakeholder communication.",
-    category: "BEHAVIORAL",
-    importance: "MEDIUM",
-    questions: [
-      {
-        id: "sample-q-6",
-        position: 1,
-        question: "Tell me about a time you had a technical disagreement with a teammate.",
-        category: "BEHAVIORAL",
-        difficulty: "MEDIUM",
-      },
-    ],
-  },
-];
 
 export default function KitQuestionsPage() {
   const params = useParams();
   const id = (params?.id as string) || "";
   const { kit, loading, fetchKit } = useKitStore();
 
-  const [selectedCategory, setSelectedCategory] =
-    useState<CategoryFilter>("ALL");
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [isRegenerateOpen, setIsRegenerateOpen] = useState(false);
 
   useEffect(() => {
@@ -151,6 +126,16 @@ export default function KitQuestionsPage() {
       fetchKit(id);
     }
   }, [id, fetchKit]);
+
+  const toggleCategory = (val: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(val) ? prev.filter((c) => c !== val) : [...prev, val]
+    );
+  };
+
+  const clearCategories = () => {
+    setSelectedCategories([]);
+  };
 
   // All questions extracted from requirements or fallback to kit?.questions
   const allQuestions: QuestionItem[] = useMemo(() => {
@@ -228,60 +213,40 @@ export default function KitQuestionsPage() {
       return Array.from(groupsMap.values());
     }
 
-    // 3. Fallback sample requirements if kit has no questions yet
-    return SAMPLE_REQUIREMENTS;
+    // 3. Fallback to empty list if kit has no requirements or questions yet
+    return [];
   }, [kit?.requirements, allQuestions]);
 
-  // Filter requirement cards by selected category
-  const filteredRequirements = useMemo(() => {
-    return requirementCards.filter((req) => {
-      if (selectedCategory === "ALL") return true;
-      const cat = (req.category || "").toUpperCase();
-      if (selectedCategory === "ROLE_SPECIFIC") return cat.includes("ROLE");
-      return cat === selectedCategory;
-    });
-  }, [requirementCards, selectedCategory]);
-
-  // Counts for category filter pills
+  // Counts for each category option
   const categoryCounts = useMemo(() => {
-    const total = requirementCards.length;
-    const technical = requirementCards.filter(
-      (r) => (r.category || "").toUpperCase() === "TECHNICAL"
-    ).length;
-    const behavioral = requirementCards.filter(
-      (r) => (r.category || "").toUpperCase() === "BEHAVIORAL"
-    ).length;
-    const roleSpecific = requirementCards.filter((r) =>
-      (r.category || "").toUpperCase().includes("ROLE")
-    ).length;
-
-    return {
-      ALL: total,
-      TECHNICAL: technical,
-      BEHAVIORAL: behavioral,
-      ROLE_SPECIFIC: roleSpecific,
+    const counts: Record<string, number> = {
+      TECHNICAL: 0,
+      BEHAVIORAL: 0,
+      ROLE_SPECIFIC: 0,
+      COMPANY: 0,
+      SYSTEM_DESIGN: 0,
     };
+
+    requirementCards.forEach((req) => {
+      const normalized = normalizeCategory(req.category);
+      counts[normalized] = (counts[normalized] || 0) + 1;
+    });
+
+    return counts;
   }, [requirementCards]);
+
+  // Filter requirement cards by selected categories
+  const filteredRequirements = useMemo(() => {
+    if (selectedCategories.length === 0) return requirementCards;
+    return requirementCards.filter((req) => {
+      const cat = normalizeCategory(req.category);
+      return selectedCategories.includes(cat);
+    });
+  }, [requirementCards, selectedCategories]);
 
   if (loading && !kit) {
     return <KitLoading />;
   }
-
-  const categoryPills: { key: CategoryFilter; label: string; count: number }[] =
-    [
-      { key: "ALL", label: "All", count: categoryCounts.ALL },
-      { key: "TECHNICAL", label: "Technical", count: categoryCounts.TECHNICAL },
-      {
-        key: "BEHAVIORAL",
-        label: "Behavioral",
-        count: categoryCounts.BEHAVIORAL,
-      },
-      {
-        key: "ROLE_SPECIFIC",
-        label: "Role Specific",
-        count: categoryCounts.ROLE_SPECIFIC,
-      },
-    ];
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7 w-full text-white">
@@ -307,42 +272,169 @@ export default function KitQuestionsPage() {
         </div>
       </div>
 
-      {/* Filter Bar: Category Tabs & Regenerate Button */}
-      <div className="flex items-center justify-between gap-3 w-full">
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none min-w-0">
-          {categoryPills.map((pill) => {
-            const isActive = selectedCategory === pill.key;
-            return (
+      {/* Filter Bar: Faceted Popover + Command Filter & Regenerate Button */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 w-full">
+        {/* Left Side: Category Popover Filter & Active Filter Chips */}
+        <div className="flex flex-wrap items-center gap-2 min-w-0">
+          <Popover>
+            <PopoverTrigger
+              type="button"
+              className={cn(
+                "h-9 px-3 rounded-xl border border-dashed border-white/20 bg-white/5 hover:bg-white/10 text-xs sm:text-sm font-medium text-white/90 flex items-center gap-2 transition-all cursor-pointer select-none shrink-0",
+                selectedCategories.length > 0 && "border-solid border-white/30 bg-white/10 text-white"
+              )}
+            >
+              <SlidersHorizontal className="size-3.5 text-white/70 shrink-0" />
+              <span>Category</span>
+              {selectedCategories.length > 0 && (
+                <>
+                  <div className="h-4 w-px bg-white/20 mx-0.5" />
+                  <Badge
+                    variant="secondary"
+                    className="h-5 px-1.5 rounded-md bg-white text-black font-semibold text-[11px] lg:hidden"
+                  >
+                    {selectedCategories.length}
+                  </Badge>
+                  <div className="hidden lg:flex items-center gap-1">
+                    {selectedCategories.length > 2 ? (
+                      <Badge
+                        variant="secondary"
+                        className="h-5 px-1.5 rounded-md bg-white/15 text-white font-medium text-[11px]"
+                      >
+                        {selectedCategories.length} selected
+                      </Badge>
+                    ) : (
+                      selectedCategories.map((val) => {
+                        const opt = CATEGORY_OPTIONS.find((o) => o.value === val);
+                        return (
+                          <Badge
+                            key={val}
+                            variant="secondary"
+                            className="h-5 px-1.5 rounded-md bg-white/15 text-white font-medium text-[11px]"
+                          >
+                            {opt?.label || val}
+                          </Badge>
+                        );
+                      })
+                    )}
+                  </div>
+                </>
+              )}
+            </PopoverTrigger>
+
+            <PopoverContent
+              className="w-56 p-0 border border-white/10 bg-[#131515] text-white shadow-2xl rounded-xl overflow-hidden"
+              align="start"
+              sideOffset={6}
+            >
+              <Command className="bg-transparent text-white">
+                <CommandInput
+                  placeholder="Filter category..."
+                  className="text-white placeholder:text-white/40 text-xs"
+                />
+                <CommandList className="max-h-64 p-1">
+                  <CommandEmpty className="text-white/50 text-xs py-3 text-center">
+                    No category found.
+                  </CommandEmpty>
+                  <CommandGroup>
+                    {CATEGORY_OPTIONS.map((option) => {
+                      const isSelected = selectedCategories.includes(option.value);
+                      const Icon = option.icon;
+                      const count = categoryCounts[option.value] || 0;
+
+                      return (
+                        <CommandItem
+                          key={option.value}
+                          value={option.label}
+                          onSelect={() => toggleCategory(option.value)}
+                          className={cn(
+                            "flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-medium cursor-pointer transition-colors text-white/80 hover:text-white hover:bg-white/10",
+                            isSelected && "bg-white/10 text-white"
+                          )}
+                        >
+                          <div
+                            className={cn(
+                              "flex size-4 shrink-0 items-center justify-center rounded border transition-colors",
+                              isSelected
+                                ? "bg-white border-white text-black"
+                                : "border-white/30 bg-transparent text-transparent"
+                            )}
+                          >
+                            <Check className="size-3 stroke-3" />
+                          </div>
+                          <Icon className="size-3.5 text-white/60 shrink-0" />
+                          <span className="truncate flex-1">{option.label}</span>
+                          <span
+                            data-slot="command-shortcut"
+                            className="ml-auto font-mono text-[11px] text-white/40"
+                          >
+                            {count}
+                          </span>
+                        </CommandItem>
+                      );
+                    })}
+                  </CommandGroup>
+
+                  {selectedCategories.length > 0 && (
+                    <>
+                      <CommandSeparator className="bg-white/10 my-1" />
+                      <CommandGroup>
+                        <CommandItem
+                          onSelect={clearCategories}
+                          className="justify-center text-center text-xs font-medium text-white/60 hover:text-white hover:bg-white/10 py-1.5 cursor-pointer rounded-lg"
+                        >
+                          Clear filters
+                        </CommandItem>
+                      </CommandGroup>
+                    </>
+                  )}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          {/* Quick Active Filter Badges (Removable chips) */}
+          {selectedCategories.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5">
+              {selectedCategories.map((val) => {
+                const opt = CATEGORY_OPTIONS.find((o) => o.value === val);
+                return (
+                  <button
+                    key={val}
+                    type="button"
+                    onClick={() => toggleCategory(val)}
+                    className="h-7 px-2 rounded-lg bg-white/10 hover:bg-white/15 border border-white/10 text-white/90 text-xs flex items-center gap-1.5 transition-colors cursor-pointer group"
+                    title={`Remove ${opt?.label || val} filter`}
+                  >
+                    <span>{opt?.label || val}</span>
+                    <X className="size-3 text-white/40 group-hover:text-white transition-colors" />
+                  </button>
+                );
+              })}
               <button
-                key={pill.key}
                 type="button"
-                onClick={() => setSelectedCategory(pill.key)}
-                className={cn(
-                  "h-9 px-3.5 sm:px-4 rounded-xl text-xs sm:text-sm font-medium whitespace-nowrap transition-all cursor-pointer select-none",
-                  isActive
-                    ? "bg-white text-black font-semibold shadow-sm"
-                    : "bg-white/5 text-white/70 hover:text-white hover:bg-white/10 border border-white/10"
-                )}
+                onClick={clearCategories}
+                className="h-7 px-2 text-xs text-white/50 hover:text-white transition-colors cursor-pointer"
               >
-                {pill.label} ({pill.count})
+                Reset
               </button>
-            );
-          })}
+            </div>
+          )}
         </div>
 
-        {/* Small Regenerate Button positioned inline with filters at the right side */}
+        {/* Right Side: Small Regenerate Button */}
         <Button
           variant="outline"
           size="sm"
           onClick={() => setIsRegenerateOpen(true)}
-          className="h-9 px-3 rounded-lg border border-white/10 bg-[#161a1a] hover:bg-white/10 text-white text-xs sm:text-sm font-medium gap-1.5 shrink-0 transition-colors cursor-pointer select-none"
+          className="h-9 px-3 rounded-xl border border-white/10 bg-[#161a1a] hover:bg-white/10 text-white text-xs sm:text-sm font-medium gap-1.5 shrink-0 transition-colors cursor-pointer select-none self-start sm:self-auto"
         >
           <RotateCw className="size-3.5 text-white/70" />
           <span>Regenerate</span>
         </Button>
       </div>
 
-      {/* Requirement Cards List (Replaces old accordion) */}
+      {/* Requirement Cards List */}
       <div className="flex flex-col gap-4 sm:gap-4.5 w-full">
         {filteredRequirements.length > 0 ? (
           filteredRequirements.map((req, idx) => {
@@ -440,16 +532,20 @@ export default function KitQuestionsPage() {
               No requirements found
             </h3>
             <p className="text-xs text-white/40 mt-1 mb-4">
-              Try adjusting your category filter.
+              {selectedCategories.length > 0
+                ? "Try adjusting your category filter."
+                : "No interview questions or requirements found for this kit yet."}
             </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setSelectedCategory("ALL")}
-              className="text-xs rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-white"
-            >
-              Reset Filters
-            </Button>
+            {selectedCategories.length > 0 && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={clearCategories}
+                className="text-xs rounded-xl border-white/10 bg-white/5 hover:bg-white/10 text-white cursor-pointer"
+              >
+                Reset Filters
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -461,7 +557,7 @@ export default function KitQuestionsPage() {
         kitId={id}
         requirements={kit?.requirements}
         defaultCategory={
-          selectedCategory !== "ALL" ? selectedCategory : "TECHNICAL"
+          selectedCategories.length === 1 ? selectedCategories[0] : "TECHNICAL"
         }
       />
     </div>

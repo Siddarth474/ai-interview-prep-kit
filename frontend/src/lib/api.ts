@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useServerError } from "@/hooks/use-server-error";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL!,
@@ -36,12 +37,21 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // 2. If backend is down (Network Error) or 500
-    if (!error.response || error.response.status >= 500) {
-      console.error(
-        "Backend server is unreachable or returned 500:",
-        error.message
-      );
+    // 2. Global handler: If backend is down (Network Error) or returns 500+
+    if (!error.response) {
+      useServerError
+        .getState()
+        .setServerError(
+          "Backend server is currently unreachable. Please ensure the server is running."
+        );
+    } else if (error.response.status >= 500) {
+      useServerError
+        .getState()
+        .setServerError(
+          error.response.data?.message ||
+            "An unexpected internal server error (500) occurred on the backend.",
+          error.response.status
+        );
     }
 
     return Promise.reject(error);

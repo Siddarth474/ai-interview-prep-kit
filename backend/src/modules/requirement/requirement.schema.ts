@@ -35,3 +35,20 @@ export const requirementOutputSchema = z.object({
 export type Requirement = z.infer<typeof requirementItemSchema>;
 export type RequirementOutput = z.infer<typeof requirementOutputSchema>;
 
+export const roleBreakdownOutputSchema = z.object({
+  roleTitle: z
+    .string()
+    .describe("The job title or role extracted or inferred from the JD (e.g. 'Senior Full Stack Engineer')"),
+  responsibilities: z
+    .array(z.string())
+    .describe("List of core responsibilities, key daily duties, and ownership areas"),
+  requiredSkills: z
+    .array(z.string())
+    .describe("Core conceptual and domain skills (e.g., 'System Architecture', 'CI/CD Pipelines', 'Agile')"),
+  technologies: z
+    .array(z.string())
+    .describe("Specific programming languages, frameworks, libraries, tools, and databases mentioned (e.g., 'React', 'Node.js', 'PostgreSQL')"),
+});
+
+export type RoleBreakdownOutput = z.infer<typeof roleBreakdownOutputSchema>;
+

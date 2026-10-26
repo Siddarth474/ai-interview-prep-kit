@@ -41,10 +41,12 @@ export default function KitOverviewPage() {
           </Link>
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              {kit?.role || "Full Stack Developer"}
+              {kit?.roleBreakdown?.roleTitle || "Full Stack Developer"}
             </h1>
             <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-2xl leading-relaxed">
-              {subtitle}
+              {Array.isArray(kit?.roleBreakdown?.technologies) && kit.roleBreakdown.technologies.length > 0
+                ? kit.roleBreakdown.technologies.join(", ")
+                : subtitle}
             </p>
           </div>
         </div>

@@ -36,6 +36,7 @@ export const interviewKitService = {
     const kit = await prisma.interviewKit.findUnique({
       where: { id: kitId },
       include: {
+        roleBreakdown: true,
         flashcards: {
           orderBy: { position: "asc" },
           include: {
@@ -125,10 +126,21 @@ export const interviewKitService = {
       0,
     );
 
+    const totalTopics =
+      schedule?.days?.reduce((acc, d) => acc + d.topics.length, 0) || 0;
+    const completedTopics =
+      schedule?.days?.reduce(
+        (acc, d) => acc + d.topics.filter((t: any) => t.completed).length,
+        0,
+      ) || 0;
+    const progress =
+      totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
+
     return {
       ...kit,
       questionsCount: totalQuestions,
       flashcardsCount: kit.flashcards.length,
+      progress,
       studySchedule: schedule,
       studyPlan: schedule,
     };
@@ -140,25 +152,53 @@ export const interviewKitService = {
       include: {
         questions: {
           select: {
-            id: true
-          }
+            id: true,
+          },
         },
         flashcards: {
           select: {
-            id: true
-          }
-        }
+            id: true,
+          },
+        },
+        studySchedule: {
+          include: {
+            days: {
+              include: {
+                topics: {
+                  select: { completed: true },
+                },
+              },
+            },
+          },
+        },
       },
       orderBy: { createdAt: "desc" },
     });
 
     return {
-      kits: kits.map((kit) => ({
-        ...kit,
-        questionsCount: kit.questions.length,
-        flashcardsCount: kit.flashcards.length,
-      })),
+      kits: kits.map((kit) => {
+        const totalTopics =
+          kit.studySchedule?.days?.reduce(
+            (acc, d) => acc + d.topics.length,
+            0,
+          ) || 0;
+        const completedTopics =
+          kit.studySchedule?.days?.reduce(
+            (acc, d) => acc + d.topics.filter((t) => t.completed).length,
+            0,
+          ) || 0;
+        const progress =
+          totalTopics > 0
+            ? Math.round((completedTopics / totalTopics) * 100)
+            : 0;
 
+        return {
+          ...kit,
+          questionsCount: kit.questions.length,
+          flashcardsCount: kit.flashcards.length,
+          progress,
+        };
+      }),
     };
   },
 

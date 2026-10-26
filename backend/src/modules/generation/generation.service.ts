@@ -7,8 +7,11 @@ import { studyScheduleService } from "../studySchedule/studySchedule.service.js"
 
 export const generationService = {
   async generateKit(kitId: string) {
-    // Step 1: extract requirements
-    await requirementService.extractRequirements(kitId);
+    // Step 1: extract requirements & role breakdown from JD
+    await Promise.all([
+      requirementService.extractRequirements(kitId),
+      requirementService.extractRoleBreakdown(kitId),
+    ]);
 
     // Step 2: research the company
     await researchService.researchCompany(kitId);

@@ -39,6 +39,17 @@ export interface StudySchedule {
   updatedAt?: string | Date;
 }
 
+export interface RoleBreakdown {
+  id?: string;
+  kitId?: string;
+  roleTitle?: string | null;
+  responsibilities?: string[] | any;
+  requiredSkills?: string[] | any;
+  technologies?: string[] | any;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
 export interface KitData {
   id?: string;
   userId?: string;
@@ -50,6 +61,7 @@ export interface KitData {
   updatedAt?: string | Date;
   progress?: number;
   requirements?: any[];
+  roleBreakdown?: RoleBreakdown | null;
   questionsCount?: number;
   flashcards?: any;
   flashcardsCount?: number;
@@ -78,6 +90,18 @@ export const kitService = {
 
   async deleteKit(kitId: string): Promise<ApiResponse<any>> {
     const response = await api.delete<ApiResponse<any>>(`/kits/${kitId}`);
+    return response.data;
+  },
+
+  async toggleDayCompletion(
+    kitId: string,
+    dayNumber: number,
+    completed?: boolean,
+  ): Promise<ApiResponse<any>> {
+    const response = await api.patch<ApiResponse<any>>(
+      `/kits/${kitId}/schedule/days/${dayNumber}/complete`,
+      { completed },
+    );
     return response.data;
   },
 };

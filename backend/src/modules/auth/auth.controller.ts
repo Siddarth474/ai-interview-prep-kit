@@ -62,4 +62,27 @@ export const AuthHandler = {
       next(error);
     }
   },
+
+  /**
+   * Get current authenticated user profile
+   * GET /auth/me
+   */
+  async getMeHandler(req: Request, res: Response, next: NextFunction) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        return res
+          .status(401)
+          .json(new ApiResponse(401, null, "Authentication required"));
+      }
+
+      const user = await AuthService.getCurrentUser(userId);
+
+      return res
+        .status(200)
+        .json(new ApiResponse(200, user, "User fetched successfully"));
+    } catch (error) {
+      next(error);
+    }
+  },
 };

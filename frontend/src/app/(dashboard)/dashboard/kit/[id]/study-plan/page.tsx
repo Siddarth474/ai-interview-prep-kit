@@ -50,6 +50,7 @@ export default function KitStudyPlanPage() {
         kitId={id}
         days={scheduleDays}
         createdAt={kit?.createdAt}
+        requirements={kit?.requirements}
       />
     </div>
   );

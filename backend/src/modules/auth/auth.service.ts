@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { prisma } from "../../lib/prisma.js";
-import type { SignupInput, LoginInput } from "./auth.schema.js";
+import type { SignupInput, LoginInput, UserResponse } from "./auth.schema.js";
 import { ApiError } from "../../utils/ApiError.js";
 
 export interface AuthResponse {
@@ -142,5 +142,28 @@ export const AuthService = {
       user: sanitizedUser,
       token,
     };
+  },
+
+  async getCurrentUser(userId: string): Promise<UserResponse> {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
+    });
+
+    if (!user) {
+      throw new ApiError("User not found", 404, "USER_NOT_FOUND");
+    }
+
+    return user;
+  },
+
+  async getMe(userId: string): Promise<UserResponse> {
+    return this.getCurrentUser(userId);
   },
 };

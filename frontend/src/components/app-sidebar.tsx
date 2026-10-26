@@ -9,8 +9,6 @@ import {
   FileText,
   LayoutDashboard,
   Search,
-  Settings,
-  Sparkles,
   SquareStack,
 } from "lucide-react";
 
@@ -27,6 +25,8 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useUser } from "@/hooks/use-user";
 
 const mainNavItems = [
   {
@@ -38,22 +38,42 @@ const mainNavItems = [
 
 const getKitNavItems = (kitId: string) => [
   { title: "Overview", url: `/dashboard/kit/${kitId}`, icon: LayoutDashboard },
-  { title: "Requirements", url: `/dashboard/kit/${kitId}/requirements`, icon: FileText },
-  { title: "Interview Questions", url: `/dashboard/kit/${kitId}/questions`, icon: Search },
-  { title: "Flashcards", url: `/dashboard/kit/${kitId}/flashcards`, icon: SquareStack },
-  { title: "Study Plan", url: `/dashboard/kit/${kitId}/study-plan`, icon: Calendar },
-  { title: "Settings", url: `/dashboard/kit/${kitId}/settings`, icon: Settings },
+  {
+    title: "Requirements",
+    url: `/dashboard/kit/${kitId}/requirements`,
+    icon: FileText,
+  },
+  {
+    title: "Interview Questions",
+    url: `/dashboard/kit/${kitId}/questions`,
+    icon: Search,
+  },
+  {
+    title: "Flashcards",
+    url: `/dashboard/kit/${kitId}/flashcards`,
+    icon: SquareStack,
+  },
+  {
+    title: "Study Plan",
+    url: `/dashboard/kit/${kitId}/study-plan`,
+    icon: Calendar,
+  },
 ];
-
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const params = useParams();
-  
+  const { user } = useUser();
+
   // Agar URL /dashboard/[id] hai toh params.id mil jayega
   const kitId = params?.id as string | undefined;
   const isKitView = Boolean(kitId);
-  const activeNavItems = isKitView && kitId ? getKitNavItems(kitId) : mainNavItems;
+  const activeNavItems =
+    isKitView && kitId ? getKitNavItems(kitId) : mainNavItems;
+
+  const displayName = user?.username || "Account";
+  const displayEmail = user?.email || "Signed in";
+  const initials = (displayName.slice(0, 2) || "U").toUpperCase();
 
   return (
     <Sidebar
@@ -119,15 +139,39 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarContent>
 
       <SidebarFooter className="border-t border-white/10 p-2 group-data-[collapsible=icon]:px-0">
-        <SidebarMenu>
+        <SidebarMenu className="gap-1">
+          {/* Landing Page link */}
+          <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center"></SidebarMenuItem>
+
+          {/* User Details */}
           <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
             <SidebarMenuButton
-              render={<Link href="/" />}
-              tooltip="Landing Page"
-              className="h-10 rounded-xl px-3 text-white/60 hover:text-white hover:bg-white/10 transition-colors group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center"
+              size="lg"
+              tooltip={`${displayName} (${displayEmail})`}
+              className="h-12 rounded-xl px-2.5 text-white hover:bg-white/10 transition-colors group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center"
             >
-              <Sparkles className="size-4 shrink-0" />
-              <span className="font-medium text-sm">Landing Page</span>
+              <Avatar className="size-8 rounded-lg bg-neutral-800 border border-white/10 text-white shrink-0">
+                <AvatarFallback
+                  suppressHydrationWarning
+                  className="rounded-lg bg-neutral-800 text-white text-xs font-semibold"
+                >
+                  {initials}
+                </AvatarFallback>
+              </Avatar>
+              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                <span
+                  suppressHydrationWarning
+                  className="truncate font-medium text-white text-xs sm:text-sm"
+                >
+                  {displayName}
+                </span>
+                <span
+                  suppressHydrationWarning
+                  className="truncate text-[11px] text-white/50"
+                >
+                  {displayEmail}
+                </span>
+              </div>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -383,3 +383,22 @@ For each flashcard return:
 - back: the concise answer
 `;
 }
+
+export function buildRoleBreakdownPrompt(jd: string): string {
+  return `You are an expert technical recruiter and engineering hiring manager.
+Analyze the following Job Description (JD) and extract a comprehensive, structured role breakdown.
+
+Extract the following:
+1. roleTitle: The primary job title or role (e.g., 'Senior Full Stack Engineer', 'Backend Developer', 'DevOps Engineer'). If not explicitly stated, infer the most accurate professional title from the responsibilities and tech stack.
+2. responsibilities: An array of concise, high-impact bullet points describing what this engineer will own, build, deliver, and maintain.
+3. requiredSkills: Core engineering and domain competencies (e.g., 'System Architecture', 'API Design', 'Microservices', 'Distributed Systems', 'Agile/Scrum', 'Testing & CI/CD').
+4. technologies: Specific programming languages, frameworks, libraries, cloud providers, and databases explicitly mentioned or directly required (e.g., 'TypeScript', 'Node.js', 'React', 'PostgreSQL', 'Docker', 'AWS').
+
+Guidelines:
+- Do not invent technologies or requirements that are not supported by the job description.
+- Keep bullet points clear and concise.
+
+JOB DESCRIPTION:
+${jd}
+`;
+}

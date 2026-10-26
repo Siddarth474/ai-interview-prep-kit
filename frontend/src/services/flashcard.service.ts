@@ -83,4 +83,16 @@ export const flashcardService = {
     );
     return response.data;
   },
+
+  async reviewFlashcard(
+    kitId: string,
+    flashcardId: string,
+    status: FlashcardStatus
+  ): Promise<ApiResponse<FlashcardProgress>> {
+    const response = await api.post<ApiResponse<FlashcardProgress>>(
+      `/kits/${kitId}/flashcards/${flashcardId}/review`,
+      { status }
+    );
+    return response.data;
+  },
 };

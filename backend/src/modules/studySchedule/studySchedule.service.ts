@@ -1,4 +1,5 @@
-import { prisma } from "../../lib/prisma.js"
+import { prisma } from "../../lib/prisma.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 type Importance = "HIGH" | "MEDIUM" | "LOW";
 
@@ -93,6 +94,101 @@ export const studyScheduleService = {
     });
   },
 
+  async toggleDayCompletion(
+    kitId: string,
+    userId: string,
+    dayNumber: number,
+    completedState?: boolean,
+  ) {
+    const kit = await prisma.interviewKit.findUnique({
+      where: { id: kitId },
+      select: { id: true, userId: true },
+    });
+
+    if (!kit) {
+      throw new ApiError("Interview kit not found", 404, "KIT_NOT_FOUND");
+    }
+
+    if (kit.userId !== userId) {
+      throw new ApiError(
+        "You do not have access to this kit",
+        403,
+        "KIT_FORBIDDEN",
+      );
+    }
+
+    const schedule = await prisma.studySchedule.findUnique({
+      where: { kitId },
+      include: {
+        days: {
+          where: { dayNumber },
+          include: {
+            topics: true,
+          },
+        },
+      },
+    });
+
+    const targetDay = schedule?.days?.[0];
+    if (!targetDay) {
+      throw new ApiError(
+        `Study day ${dayNumber} not found`,
+        404,
+        "DAY_NOT_FOUND",
+      );
+    }
+    const newStatus =
+      completedState !== undefined
+        ? completedState
+        : !targetDay.topics.every((t) => t.completed);
+
+    // Update all topics in this day
+    await prisma.studyScheduleTopic.updateMany({
+      where: { dayId: targetDay.id },
+      data: { completed: newStatus },
+    });
+
+    // Fetch updated schedule with all days & topics to compute new progress
+    const updatedSchedule = await prisma.studySchedule.findUnique({
+      where: { kitId },
+      include: {
+        days: {
+          orderBy: { dayNumber: "asc" },
+          include: {
+            topics: {
+              include: {
+                requirement: {
+                  select: {
+                    id: true,
+                    topic: true,
+                    category: true,
+                    questions: { select: { id: true } },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const totalTopics =
+      updatedSchedule?.days.reduce((acc, d) => acc + d.topics.length, 0) || 0;
+    const completedTopics =
+      updatedSchedule?.days.reduce(
+        (acc, d) => acc + d.topics.filter((t) => t.completed).length,
+        0,
+      ) || 0;
+    const progress =
+      totalTopics > 0 ? Math.round((completedTopics / totalTopics) * 100) : 0;
+
+    return {
+      dayNumber,
+      completed: newStatus,
+      progress,
+      studySchedule: updatedSchedule,
+    };
+  },
 };
 
 function generateStudySchedule(

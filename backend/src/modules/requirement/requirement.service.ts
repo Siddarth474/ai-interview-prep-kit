@@ -30,5 +30,40 @@ export const requirementService = {
     //console.log("Requirements extracted successfully: ", requirements);
     return requirements;
   },
+
+  async extractRoleBreakdown(kitId: string) {
+    const kit = await prisma.interviewKit.findUnique({
+      where: { id: kitId },
+      select: {
+        id: true,
+        jobDescription: true,
+      },
+    });
+
+    if (!kit) {
+      throw new Error("Interview kit not found");
+    }
+
+    const breakdown = await aiService.extractRoleBreakdown(kit.jobDescription);
+
+    const savedBreakdown = await prisma.roleBreakdown.upsert({
+      where: { kitId },
+      update: {
+        roleTitle: breakdown.roleTitle,
+        responsibilities: breakdown.responsibilities,
+        requiredSkills: breakdown.requiredSkills,
+        technologies: breakdown.technologies,
+      },
+      create: {
+        kitId,
+        roleTitle: breakdown.roleTitle,
+        responsibilities: breakdown.responsibilities,
+        requiredSkills: breakdown.requiredSkills,
+        technologies: breakdown.technologies,
+      },
+    });
+
+    return savedBreakdown;
+  },
 };
 

@@ -46,7 +46,7 @@ model InterviewKit {
   researchSources ResearchSource[]
   requirements    Requirement[]
   // companyBrief    CompanyBrief?
-  // roleBreakdown   RoleBreakdown?
+  roleBreakdown   RoleBreakdown?
   questions       Question[]
   studySchedule StudySchedule? 
   flashcards      Flashcard[]
@@ -132,6 +132,21 @@ model Requirement {
   updatedAt DateTime @updatedAt
 
   @@index([kitId])
+}
+
+model RoleBreakdown {
+  id String @id @default(cuid())
+
+  kitId String @unique
+  kit   InterviewKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+
+  roleTitle        String?
+  responsibilities Json?
+  requiredSkills   Json?
+  technologies     Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum QuestionCategory { 

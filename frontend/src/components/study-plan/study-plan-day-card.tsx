@@ -14,22 +14,30 @@ export interface StudyPlanDayItem {
   flashcardsCount: number;
   status: "ACTIVE" | "LOCKED" | "COMPLETED";
   isEmpty?: boolean;
+  questionId?: string;
+  requirementId?: string;
+  estimatedMinutes?: number | null;
 }
 
 interface StudyPlanDayCardProps {
   item: StudyPlanDayItem;
   kitId: string;
   onUnlockDay?: (dayNumber: number) => void;
+  onToggleComplete?: (dayNumber: number) => void;
 }
 
 export function StudyPlanDayCard({
   item,
   kitId,
   onUnlockDay,
+  onToggleComplete,
 }: StudyPlanDayCardProps) {
   const isUnlocked = item.status === "ACTIVE";
   const isCompleted = item.status === "COMPLETED";
   const isEmpty = item.isEmpty || (!item.topicTitle && item.questionsCount === 0);
+  const targetUrl = item.questionId
+    ? `/dashboard/kit/${kitId}/questions/${item.questionId}`
+    : `/dashboard/kit/${kitId}/questions`;
 
   return (
     <Card
@@ -37,9 +45,11 @@ export function StudyPlanDayCard({
         "rounded-2xl border border-white/10 bg-[#131515] p-5 sm:p-6 transition-all duration-200 select-none",
         isEmpty
           ? "opacity-50 border-white/5 bg-[#101212]"
-          : isUnlocked
-            ? "hover:border-white/20 hover:bg-[#161818] shadow-sm"
-            : "opacity-90 hover:border-white/15 hover:bg-[#151717]"
+          : isCompleted
+            ? "border-emerald-500/20 bg-[#101514] hover:border-emerald-500/30"
+            : isUnlocked
+              ? "hover:border-white/20 hover:bg-[#161818] shadow-sm"
+              : "opacity-90 hover:border-white/15 hover:bg-[#151717]"
       )}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -69,10 +79,16 @@ export function StudyPlanDayCard({
                 <h4 className="text-base sm:text-[17px] font-semibold text-white tracking-tight truncate sm:whitespace-normal">
                   {item.topicTitle}
                 </h4>
-                <p className="text-xs sm:text-sm text-white/50 mt-1 flex items-center gap-1.5">
+                <p className="text-xs sm:text-sm text-white mt-1 flex flex-wrap items-center gap-1.5">
                   <span>{item.questionsCount} questions</span>
                   <span>•</span>
                   <span>{item.flashcardsCount} flashcards</span>
+                  {item.estimatedMinutes ? (
+                    <>
+                      <span>•</span>
+                      <span>⏱️ ~{item.estimatedMinutes}m</span>
+                    </>
+                  ) : null}
                 </p>
               </>
             )}
@@ -86,18 +102,34 @@ export function StudyPlanDayCard({
               —
             </div>
           ) : isCompleted ? (
-            <div className="h-10 px-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 text-xs sm:text-sm font-medium flex items-center gap-2">
-              <CheckCircle2 className="size-4" />
-              <span>Completed</span>
-            </div>
-          ) : isUnlocked ? (
-            <Link
-              href={`/dashboard/kit/${kitId}/questions`}
-              className="bg-white hover:bg-white/90 text-black font-semibold px-5 py-2.5 rounded-xl text-sm h-10 shrink-0 shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 group self-start sm:self-auto"
+            <button
+              type="button"
+              onClick={() => onToggleComplete?.(item.dayNumber)}
+              className="h-10 px-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs sm:text-sm font-medium flex items-center gap-2 transition-all cursor-pointer group"
+              title="Day completed! Click to mark incomplete"
             >
-              <span>Start</span>
-              <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
-            </Link>
+              <CheckCircle2 className="size-4 group-hover:scale-110 transition-transform" />
+              <span>Completed</span>
+            </button>
+          ) : isUnlocked ? (
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => onToggleComplete?.(item.dayNumber)}
+                className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 text-white/70 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-all cursor-pointer group"
+                title="Mark Day as Completed"
+              >
+                <CheckCircle2 className="size-4 shrink-0 text-white/40 group-hover:text-emerald-400 transition-colors" />
+                <span className="hidden sm:inline">Mark Done</span>
+              </button>
+              <Link
+                href={targetUrl}
+                className="bg-white hover:bg-white/90 text-black font-semibold px-4 sm:px-5 py-2.5 rounded-xl text-sm h-10 shrink-0 shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 group self-start sm:self-auto"
+              >
+                <span>Start</span>
+                <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            </div>
           ) : (
             <button
               type="button"

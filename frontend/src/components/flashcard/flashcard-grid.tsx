@@ -38,10 +38,12 @@ export const SAMPLE_FLASHCARDS: FlashcardItem[] = [
 
 interface FlashcardGridProps {
   cards?: (Flashcard | FlashcardItem)[];
+  kitId?: string;
 }
 
 export function FlashcardGrid({
   cards,
+  kitId,
 }: FlashcardGridProps) {
   const displayCards =
     cards && cards.length > 0 ? cards : SAMPLE_FLASHCARDS;
@@ -53,6 +55,7 @@ export function FlashcardGrid({
           key={card.id || idx}
           card={card}
           index={idx}
+          kitId={kitId}
         />
       ))}
     </div>

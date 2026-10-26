@@ -64,7 +64,7 @@ export default function KitFlashcardsPage() {
       </div>
 
       {/* Flashcards Grid (no filters) */}
-      <FlashcardGrid cards={flashcards} />
+      <FlashcardGrid cards={flashcards} kitId={id} />
     </div>
   );
 }

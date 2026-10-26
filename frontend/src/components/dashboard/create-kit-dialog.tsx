@@ -41,7 +41,7 @@ export function CreateKitDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="fixed top-1/2 left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl bg-[#0e1111] border border-white/10 p-6 text-white shadow-2xl backdrop-blur-xl">
+      <DialogContent className="fixed top-1/2 left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl bg-[#0e1111] border border-white/10 p-6 text-white shadow-2xl backdrop-blur-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-1.5 text-left">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-white/10 text-white">
@@ -107,7 +107,7 @@ export function CreateKitDialog({
               disabled={isLoading}
               required
               rows={5}
-              className="min-h-30 bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm resize-none"
+              className="min-h-30 max-h-52 overflow-y-auto bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm resize-none"
             />
           </div>
 

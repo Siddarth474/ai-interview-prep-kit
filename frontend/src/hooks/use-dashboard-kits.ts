@@ -33,8 +33,15 @@ export function useDashboardKits() {
         setKits(kitsList);
       }
     } catch (error: any) {
-      if (!error.response || error.response.status >= 500) {
-        setServerError("Backend server is currently unreachable. Please ensure the server is running.");
+      if (!error.response) {
+        setServerError(
+          "Backend server is currently unreachable. Please ensure the backend is running on http://localhost:5000."
+        );
+      } else if (error.response.status >= 500) {
+        setServerError(
+          error.response?.data?.message ||
+            "Internal server error (500) occurred on backend."
+        );
       } else {
         setServerError(error.response?.data?.message || "Failed to fetch kits.");
       }
@@ -117,7 +124,7 @@ export function useDashboardKits() {
           }
         }
       } catch (err) {
-        console.error("Dashboard background poll error:", err);
+        console.warn("Dashboard background poll error:", err);
       }
     }, 5000);
 

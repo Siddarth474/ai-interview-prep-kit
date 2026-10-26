@@ -55,6 +55,9 @@ export function useSignup() {
       });
 
       if (res.success) {
+        if (res.data?.user) {
+          localStorage.setItem("user", JSON.stringify(res.data.user));
+        }
         router.push("/dashboard");
       } else {
         setError(res.message || "Failed to create account. Please try again.");

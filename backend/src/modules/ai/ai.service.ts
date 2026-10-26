@@ -1,6 +1,7 @@
 import { geminiProvider } from "../../lib/gemini-provider.js";
 import {
   buildRequirementPrompt,
+  buildRoleBreakdownPrompt,
   generateTechnicalQuestionsPrompt,
   generateBehavioralQuestionsPrompt,
   generateSystemDesignQuestionsPrompt,
@@ -9,8 +10,10 @@ import {
 } from "./prompt.js";
 import {
   requirementOutputSchema,
+  roleBreakdownOutputSchema,
   type Requirement,
   type RequirementOutput,
+  type RoleBreakdownOutput,
 } from "../requirement/requirement.schema.js";
 import {
   technicalQuestionsOutputSchema,
@@ -49,6 +52,17 @@ export const aiService = {
     );
 
     return result.requirements;
+  },
+
+  async extractRoleBreakdown(
+    jobDescription: string,
+  ): Promise<RoleBreakdownOutput> {
+    const result = await geminiProvider.generateStructuredContent(
+      buildRoleBreakdownPrompt(jobDescription),
+      roleBreakdownOutputSchema,
+    );
+
+    return result;
   },
 
   async generateQuestionsForKit(kitId: string) {

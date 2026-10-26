@@ -13,7 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Lock, Unlock, ArrowRight } from "lucide-react";
 import Link from "next/link";
-import type { StudyScheduleDay } from "@/services/kit.service";
+import { kitService, type StudyScheduleDay } from "@/services/kit.service";
+import { useKitStore } from "@/hooks/use-kit-store";
 
 export const SAMPLE_STUDY_PLAN_DAYS: StudyPlanDayItem[] = [
   {
@@ -71,9 +72,15 @@ interface StudyPlanListProps {
   kitId: string;
   days?: StudyScheduleDay[];
   createdAt?: string | Date;
+  requirements?: any[];
 }
 
-export function StudyPlanList({ kitId, days, createdAt }: StudyPlanListProps) {
+export function StudyPlanList({
+  kitId,
+  days,
+  createdAt,
+  requirements,
+}: StudyPlanListProps) {
   // State for unlocked days (default Day 1 is unlocked)
   const [unlockedDays, setUnlockedDays] = useState<Record<number, boolean>>({
     1: true,
@@ -100,7 +107,92 @@ export function StudyPlanList({ kitId, days, createdAt }: StudyPlanListProps) {
 
           const fcCount = hasTopics ? Math.max(4, Math.round(qCount * 1.1)) : 0;
 
-          const isDayUnlocked = unlockedDays[d.dayNumber] ?? d.dayNumber === 1;
+          const isDayCompleted = hasTopics && d.topics.every((t) => t.completed);
+
+          // Auto-unlock day if previous day is completed
+          const prevDayCompleted =
+            d.dayNumber > 1 &&
+            days[d.dayNumber - 2]?.topics &&
+            days[d.dayNumber - 2].topics.length > 0 &&
+            days[d.dayNumber - 2].topics.every((t) => t.completed);
+
+          const isDayUnlocked =
+            isDayCompleted ||
+            (unlockedDays[d.dayNumber] ??
+              (d.dayNumber === 1 || Boolean(prevDayCompleted)));
+
+          const status: "ACTIVE" | "LOCKED" | "COMPLETED" = isDayCompleted
+            ? "COMPLETED"
+            : isDayUnlocked
+              ? "ACTIVE"
+              : "LOCKED";
+
+          const estMinutes = hasTopics
+            ? d.topics.reduce(
+                (acc, t) =>
+                  acc +
+                  (t.estimatedMinutes ||
+                    (t.requirement?.questions?.length || 4) * 10),
+                0,
+              )
+            : 0;
+
+          // Resolve questionId and requirementId for this day
+          let resolvedQuestionId: string | undefined;
+          let resolvedRequirementId: string | undefined;
+
+          if (hasTopics && d.topics) {
+            for (const topic of d.topics) {
+              if (topic.requirementId) {
+                resolvedRequirementId =
+                  resolvedRequirementId || topic.requirementId;
+              }
+              const topicQId = topic.requirement?.questions?.[0]?.id;
+              if (topicQId) {
+                resolvedQuestionId = topicQId;
+                resolvedRequirementId =
+                  resolvedRequirementId || topic.requirement?.id;
+                break;
+              }
+              if (topic.requirementId && requirements) {
+                const req = requirements.find(
+                  (r: any) => r.id === topic.requirementId,
+                );
+                if (req?.questions?.[0]?.id) {
+                  resolvedQuestionId = req.questions[0].id;
+                  resolvedRequirementId = resolvedRequirementId || req.id;
+                  break;
+                }
+              }
+            }
+          }
+
+          // Fallback matching by topic title
+          if (!resolvedQuestionId && hasTopics && requirements && d.topics) {
+            for (const topic of d.topics) {
+              const matchedReq = requirements.find(
+                (r: any) =>
+                  r.topic?.toLowerCase().trim() ===
+                  topic.topic?.toLowerCase().trim(),
+              );
+              if (matchedReq?.questions?.[0]?.id) {
+                resolvedQuestionId = matchedReq.questions[0].id;
+                resolvedRequirementId = resolvedRequirementId || matchedReq.id;
+                break;
+              }
+            }
+          }
+
+          // Fallback to first available question in kit requirements
+          if (!resolvedQuestionId && requirements && requirements.length > 0) {
+            for (const req of requirements) {
+              if (req.questions?.[0]?.id) {
+                resolvedQuestionId = req.questions[0].id;
+                resolvedRequirementId = resolvedRequirementId || req.id;
+                break;
+              }
+            }
+          }
 
           return {
             id: d.id,
@@ -109,18 +201,27 @@ export function StudyPlanList({ kitId, days, createdAt }: StudyPlanListProps) {
             topicTitle: topicNames,
             questionsCount: qCount,
             flashcardsCount: fcCount,
-            status: isDayUnlocked ? "ACTIVE" : "LOCKED",
+            status,
             isEmpty: !hasTopics,
+            questionId: resolvedQuestionId,
+            requirementId: resolvedRequirementId,
+            estimatedMinutes: estMinutes,
           };
         })
-      : SAMPLE_STUDY_PLAN_DAYS.map((sample) => ({
-          ...sample,
-          status:
-            (unlockedDays[sample.dayNumber] ?? sample.dayNumber === 1)
-              ? "ACTIVE"
-              : "LOCKED",
-          isEmpty: false,
-        }));
+      : SAMPLE_STUDY_PLAN_DAYS.map((sample, idx) => {
+          const fallbackReq = requirements?.[idx] || requirements?.[0];
+          const fallbackQId = fallbackReq?.questions?.[0]?.id;
+          return {
+            ...sample,
+            questionId: sample.questionId || fallbackQId,
+            requirementId: sample.requirementId || fallbackReq?.id,
+            status:
+              (unlockedDays[sample.dayNumber] ?? sample.dayNumber === 1)
+                ? "ACTIVE"
+                : "LOCKED",
+            isEmpty: false,
+          };
+        });
 
   const handleUnlockDay = (dayNumber: number) => {
     const item = planItems.find((p) => p.dayNumber === dayNumber);
@@ -136,6 +237,40 @@ export function StudyPlanList({ kitId, days, createdAt }: StudyPlanListProps) {
     }
   };
 
+  const handleToggleComplete = async (dayNumber: number) => {
+    const currentItem = planItems.find((p) => p.dayNumber === dayNumber);
+    if (!currentItem || currentItem.isEmpty) return;
+
+    const willBeCompleted = currentItem.status !== "COMPLETED";
+
+    // Optimistically unlock the next day if completing this one
+    if (willBeCompleted) {
+      setUnlockedDays((prev) => ({
+        ...prev,
+        [dayNumber]: true,
+        [dayNumber + 1]: true,
+      }));
+    }
+
+    try {
+      const res = await kitService.toggleDayCompletion(
+        kitId,
+        dayNumber,
+        willBeCompleted,
+      );
+
+      if (res.success && res.data) {
+        useKitStore.getState().updateKit({
+          progress: res.data.progress,
+          studySchedule: res.data.studySchedule,
+          studyPlan: res.data.studySchedule,
+        });
+      }
+    } catch (err) {
+      console.error("Failed to update day completion:", err);
+    }
+  };
+
   return (
     <>
       <div className="flex flex-col gap-3.5 sm:gap-4 w-full">
@@ -145,6 +280,7 @@ export function StudyPlanList({ kitId, days, createdAt }: StudyPlanListProps) {
             item={item}
             kitId={kitId}
             onUnlockDay={handleUnlockDay}
+            onToggleComplete={handleToggleComplete}
           />
         ))}
       </div>

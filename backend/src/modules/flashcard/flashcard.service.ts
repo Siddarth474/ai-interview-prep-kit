@@ -195,6 +195,7 @@ export const flashcardService = {
 
     const existing = await prisma.flashcard.findUnique({
       where: { id: flashcardId },
+      include: { progress: true },
     });
 
     if (!existing) {
@@ -209,17 +210,26 @@ export const flashcardService = {
       );
     }
 
+    const currentReviewCount = existing.progress?.reviewCount ?? 0;
+    const nextReviewCount = currentReviewCount + 1;
+
+    // Only mark MASTERED if reviewed at least 2 times, otherwise keep IN_PROGRESS until a second confirmation
+    const targetStatus: FlashcardStatus =
+      status === FlashcardStatus.MASTERED && nextReviewCount >= 2
+        ? FlashcardStatus.MASTERED
+        : FlashcardStatus.IN_PROGRESS;
+
     const progress = await prisma.flashcardProgress.upsert({
       where: { flashcardId },
       create: {
         flashcardId,
-        status,
-        reviewCount: 1,
+        status: targetStatus,
+        reviewCount: nextReviewCount,
         lastReviewedAt: new Date(),
       },
       update: {
-        status,
-        reviewCount: { increment: 1 },
+        status: targetStatus,
+        reviewCount: nextReviewCount,
         lastReviewedAt: new Date(),
       },
     });

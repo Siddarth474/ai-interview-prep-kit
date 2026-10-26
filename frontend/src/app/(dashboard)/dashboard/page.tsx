@@ -3,11 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { WifiOff, RefreshCw } from "lucide-react";
 import { useDashboardKits } from "@/hooks/use-dashboard-kits";
-import { DashboardTopNav } from "@/components/dashboard/dashboard-top-nav";
-import { KitsHeader } from "@/components/dashboard/kits-header";
-import { KitCard } from "@/components/dashboard/kit-card";
-import { CreateKitDialog } from "@/components/dashboard/create-kit-dialog";
-import { KitStatusDialog } from "@/components/dashboard/kit-status-dialog";
+import {
+  DashboardTopNav,
+  KitsHeader,
+  KitCard,
+  CreateKitDialog,
+  KitStatusDialog,
+} from "@/components/dashboard";
 
 export default function DashboardPage() {
   const {
