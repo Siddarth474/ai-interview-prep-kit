@@ -38,7 +38,7 @@ export default function DashboardPage() {
       <DashboardTopNav
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        userName="Anuj"
+        userName=""
       />
 
       <KitsHeader

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useFlashcard } from "@/hooks/use-flashcard";
+import { useKitStore } from "@/hooks/use-kit-store";
 import { FlashcardDetailsPopover } from "./flashcard-details-popover";
 import type {
   Flashcard,
@@ -52,6 +53,26 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
     }
     setReviewedStatus(status);
 
+    // Optimistically update store so top progress bar updates immediately
+    if (card.id) {
+      const currentKit = useKitStore.getState().kit;
+      if (currentKit && Array.isArray(currentKit.flashcards)) {
+        const updatedFlashcards = currentKit.flashcards.map((f: any) =>
+          f.id === card.id
+            ? {
+                ...f,
+                progress: {
+                  ...(f.progress || {}),
+                  status,
+                },
+                status,
+              }
+            : f
+        );
+        useKitStore.getState().updateKit({ flashcards: updatedFlashcards });
+      }
+    }
+
     if (!kitId || !card.id || isReviewing) return;
 
     setReviewingAction(status);
@@ -62,6 +83,21 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
       if (updatedProgress?.status) {
         setProgress(updatedProgress);
         setReviewedStatus(updatedProgress.status);
+        if (card.id) {
+          const currentKit = useKitStore.getState().kit;
+          if (currentKit && Array.isArray(currentKit.flashcards)) {
+            const updatedFlashcards = currentKit.flashcards.map((f: any) =>
+              f.id === card.id
+                ? {
+                    ...f,
+                    progress: updatedProgress,
+                    status: updatedProgress.status,
+                  }
+                : f
+            );
+            useKitStore.getState().updateKit({ flashcards: updatedFlashcards });
+          }
+        }
       }
     } finally {
       setReviewingAction(null);

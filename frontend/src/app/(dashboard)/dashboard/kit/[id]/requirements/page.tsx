@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useKitStore } from "@/hooks/use-kit-store";
 import KitLoading from "../loading";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 
 interface RequirementItem {
   id?: string;
@@ -91,6 +92,7 @@ export default function KitRequirementsPage() {
       {/* Top Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-start sm:items-center gap-3 sm:gap-4">
+          <SidebarTrigger className="text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0" />
           <Link
             href={`/dashboard/kit/${id}`}
             className="size-9 sm:size-10 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors shrink-0 mt-0.5 sm:mt-0"

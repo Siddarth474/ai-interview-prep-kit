@@ -2,12 +2,16 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { useParams, usePathname } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   Book,
   Calendar,
+  ChevronsUpDown,
   FileText,
+  Home,
   LayoutDashboard,
+  Loader2,
+  LogOut,
   Search,
   SquareStack,
 } from "lucide-react";
@@ -24,9 +28,19 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarRail,
+  useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useUser } from "@/hooks/use-user";
+import { authService } from "@/services/auth.service";
 
 const mainNavItems = [
   {
@@ -61,9 +75,12 @@ const getKitNavItems = (kitId: string) => [
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const router = useRouter();
   const pathname = usePathname();
   const params = useParams();
   const { user } = useUser();
+  const { isMobile } = useSidebar();
+  const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
   // Agar URL /dashboard/[id] hai toh params.id mil jayega
   const kitId = params?.id as string | undefined;
@@ -74,6 +91,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const displayName = user?.username || "Account";
   const displayEmail = user?.email || "Signed in";
   const initials = (displayName.slice(0, 2) || "U").toUpperCase();
+
+  const handleLogout = async () => {
+    if (isLoggingOut) return;
+    try {
+      setIsLoggingOut(true);
+      await authService.logout();
+    } catch (err) {
+      console.error("Logout request failed:", err);
+    } finally {
+      try {
+        localStorage.removeItem("user");
+      } catch {}
+      if (typeof document !== "undefined") {
+        document.cookie =
+          "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0";
+      }
+      window.location.href = "/login";
+    }
+  };
 
   return (
     <Sidebar
@@ -140,39 +176,92 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       <SidebarFooter className="border-t border-white/10 p-2 group-data-[collapsible=icon]:px-0">
         <SidebarMenu className="gap-1">
-          {/* Landing Page link */}
-          <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center"></SidebarMenuItem>
-
-          {/* User Details */}
+          {/* User Details & Logout Dropdown */}
           <SidebarMenuItem className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center">
-            <SidebarMenuButton
-              size="lg"
-              tooltip={`${displayName} (${displayEmail})`}
-              className="h-12 rounded-xl px-2.5 text-white hover:bg-white/10 transition-colors group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center"
-            >
-              <Avatar className="size-8 rounded-lg bg-neutral-800 border border-white/10 text-white shrink-0">
-                <AvatarFallback
-                  suppressHydrationWarning
-                  className="rounded-lg bg-neutral-800 text-white text-xs font-semibold"
+            <DropdownMenu>
+              <DropdownMenuTrigger
+                render={
+                  <SidebarMenuButton
+                    size="lg"
+                    tooltip={`${displayName} (${displayEmail})`}
+                    className="h-12 w-full rounded-xl px-2.5 text-white hover:bg-white/10 transition-colors group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center cursor-pointer data-popup-open:bg-white/10"
+                  />
+                }
+              >
+                <Avatar className="size-8 rounded-lg bg-neutral-800 border border-white/10 text-white shrink-0">
+                  <AvatarFallback
+                    suppressHydrationWarning
+                    className="rounded-lg bg-neutral-800 text-white text-xs font-semibold"
+                  >
+                    {initials}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                  <span
+                    suppressHydrationWarning
+                    className="truncate font-medium text-white text-xs sm:text-sm"
+                  >
+                    {displayName}
+                  </span>
+                  <span
+                    suppressHydrationWarning
+                    className="truncate text-[11px] text-white/50"
+                  >
+                    {displayEmail}
+                  </span>
+                </div>
+                <ChevronsUpDown className="ml-auto size-4 text-white/50 group-data-[collapsible=icon]:hidden" />
+              </DropdownMenuTrigger>
+
+              <DropdownMenuContent
+                side={isMobile ? "bottom" : "right"}
+                align="end"
+                sideOffset={8}
+                className="w-56 bg-[#0e1111] border border-white/10 text-white shadow-xl rounded-xl p-1"
+              >
+                <DropdownMenuGroup>
+                  <div className="flex items-center gap-2.5 px-2.5 py-2 text-left">
+                    <Avatar className="size-8 rounded-lg bg-neutral-800 border border-white/10 text-white shrink-0">
+                      <AvatarFallback
+                        suppressHydrationWarning
+                        className="rounded-lg bg-neutral-800 text-white text-xs font-semibold"
+                      >
+                        {initials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span
+                        suppressHydrationWarning
+                        className="truncate font-medium text-white text-xs sm:text-sm"
+                      >
+                        {displayName}
+                      </span>
+                      <span
+                        suppressHydrationWarning
+                        className="truncate text-[11px] text-white/50"
+                      >
+                        {displayEmail}
+                      </span>
+                    </div>
+                  </div>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator className="bg-white/10 my-1" />
+
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-2 px-2.5 py-2 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:bg-red-500/10 focus:text-red-300 rounded-lg cursor-pointer transition-colors"
                 >
-                  {initials}
-                </AvatarFallback>
-              </Avatar>
-              <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
-                <span
-                  suppressHydrationWarning
-                  className="truncate font-medium text-white text-xs sm:text-sm"
-                >
-                  {displayName}
-                </span>
-                <span
-                  suppressHydrationWarning
-                  className="truncate text-[11px] text-white/50"
-                >
-                  {displayEmail}
-                </span>
-              </div>
-            </SidebarMenuButton>
+                  {isLoggingOut ? (
+                    <Loader2 className="size-3.5 shrink-0 animate-spin text-red-400" />
+                  ) : (
+                    <LogOut className="size-3.5 shrink-0 text-red-400" />
+                  )}
+                  <span>{isLoggingOut ? "Logging out..." : "Log out"}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

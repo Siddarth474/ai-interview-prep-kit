@@ -34,7 +34,8 @@ export function StudyPlanDayCard({
 }: StudyPlanDayCardProps) {
   const isUnlocked = item.status === "ACTIVE";
   const isCompleted = item.status === "COMPLETED";
-  const isEmpty = item.isEmpty || (!item.topicTitle && item.questionsCount === 0);
+  const isEmpty =
+    item.isEmpty || (!item.topicTitle && item.questionsCount === 0);
   const targetUrl = item.questionId
     ? `/dashboard/kit/${kitId}/questions/${item.questionId}`
     : `/dashboard/kit/${kitId}/questions`;
@@ -49,7 +50,7 @@ export function StudyPlanDayCard({
             ? "border-emerald-500/20 bg-[#101514] hover:border-emerald-500/30"
             : isUnlocked
               ? "hover:border-white/20 hover:bg-[#161818] shadow-sm"
-              : "opacity-90 hover:border-white/15 hover:bg-[#151717]"
+              : "opacity-90 hover:border-white/15 hover:bg-[#151717]",
       )}
     >
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -61,7 +62,12 @@ export function StudyPlanDayCard({
               Day {item.dayNumber}
             </h3>
             <p className="text-xs sm:text-sm text-white/50 font-normal mt-0.5">
-              {item.dateLabel || (item.dayNumber === 1 ? "Today" : item.dayNumber === 2 ? "Tomorrow" : `Day ${item.dayNumber}`)}
+              {item.dateLabel ||
+                (item.dayNumber === 1
+                  ? "Today"
+                  : item.dayNumber === 2
+                    ? "Tomorrow"
+                    : `Day ${item.dayNumber}`)}
             </p>
           </div>
 
@@ -71,9 +77,7 @@ export function StudyPlanDayCard({
           {/* Topic Title & Subtitle */}
           <div className="min-w-0 flex-1">
             {isEmpty ? (
-              <p className="text-sm text-white/30 italic">
-                Empty
-              </p>
+              <p className="text-sm text-white/30 italic">Empty</p>
             ) : (
               <>
                 <h4 className="text-base sm:text-[17px] font-semibold text-white tracking-tight truncate sm:whitespace-normal">
@@ -98,9 +102,7 @@ export function StudyPlanDayCard({
         {/* Right Side: Action Button / Lock / Completed / Empty */}
         <div className="flex items-center self-start sm:self-auto shrink-0 pt-2 sm:pt-0">
           {isEmpty ? (
-            <div className="text-xs text-white/20 font-mono pr-2">
-              —
-            </div>
+            <div className="text-xs text-white/20 font-mono pr-2">—</div>
           ) : isCompleted ? (
             <button
               type="button"

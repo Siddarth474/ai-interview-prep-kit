@@ -16,4 +16,16 @@ export const authService = {
     const response = await api.get<ApiResponse<User>>("/auth/me");
     return response.data;
   },
+
+  async logout(): Promise<ApiResponse<{ message: string }>> {
+    const response = await api.post<ApiResponse<{ message: string }>>("/auth/logout");
+    return response.data;
+  },
+
+  async refreshToken(): Promise<ApiResponse<{ accessToken: string; refreshToken: string }>> {
+    const response = await api.post<
+      ApiResponse<{ accessToken: string; refreshToken: string }>
+    >("/auth/refresh");
+    return response.data;
+  },
 };

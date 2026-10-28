@@ -105,17 +105,15 @@ export function LandingPage() {
 
           {/* Desktop navigation */}
           <nav className="hidden items-center gap-8 md:flex">
-            {["Features", "How it works", "Sample Kit", "Pricing"].map(
-              (item) => (
-                <Button
-                  key={item}
-                  variant="ghost"
-                  className="h-auto rounded-md px-0 py-1 text-[13px] font-medium text-white/60 hover:bg-transparent hover:text-white transition-colors cursor-pointer"
-                >
-                  {item}
-                </Button>
-              ),
-            )}
+            {["Features", "How it works", "Sample Kit"].map((item) => (
+              <Button
+                key={item}
+                variant="ghost"
+                className="h-auto rounded-md px-0 py-1 text-[13px] font-medium text-white/60 hover:bg-transparent hover:text-white transition-colors cursor-pointer"
+              >
+                {item}
+              </Button>
+            ))}
           </nav>
 
           {/* Header CTA */}
@@ -172,7 +170,7 @@ export function LandingPage() {
                     "h-11 rounded-lg bg-white px-6 text-[13px] font-semibold text-[#090b0b]! shadow-md hover:bg-white/90 hover:shadow-lg transition-all",
                 })}
               >
-                Get Started Free
+                Get Started
                 <ArrowRight className="ml-2 size-4" strokeWidth={2.2} />
               </Link>
 

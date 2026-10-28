@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Pencil,
   Trash2,
+  Loader2,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -20,7 +21,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { KitData } from "@/services/kit.service";
+import { kitService, type KitData } from "@/services/kit.service";
 import { useRouter } from "next/navigation";
 
 interface KitCardProps {
@@ -158,12 +159,30 @@ export function KitCard({
     }
   };
 
+  const [isDeleting, setIsDeleting] = React.useState(false);
+
+  const handleDeleteKit = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!kit.id || isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+      await kitService.deleteKit(kit.id);
+      onDelete?.(kit.id);
+    } catch (error) {
+      console.error("Failed to delete kit:", error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Card
       onClick={handleCardClick}
       className={cn(
         "group relative border border-white/10 bg-white/3 hover:border-white/20 hover:bg-white/4 transition-all duration-200 rounded-2xl shadow-lg backdrop-blur-md p-5 flex flex-col gap-4 text-white ring-0 cursor-pointer",
         !isReady && "hover:border-purple-500/30",
+        isDeleting && "opacity-50 pointer-events-none",
       )}
     >
       <div className="flex items-start justify-between gap-3">
@@ -233,17 +252,18 @@ export function KitCard({
                   <ExternalLink className="size-3.5" />
                   <span>{isReady ? "Open Kit" : "View Progress"}</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-white/80 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer transition-colors">
-                  <Pencil className="size-3.5" />
-                  <span>Edit Details</span>
-                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10 my-1" />
                 <DropdownMenuItem
-                  onClick={() => onDelete?.(kit.id || "")}
-                  className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded-lg cursor-pointer transition-colors"
+                  onClick={handleDeleteKit}
+                  disabled={isDeleting}
+                  className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-red-400 hover:text-red-300 hover:bg-red-500/10 focus:text-red-300 focus:bg-red-500/10 rounded-lg cursor-pointer transition-colors"
                 >
-                  <Trash2 className="size-3.5" />
-                  <span>Delete Kit</span>
+                  {isDeleting ? (
+                    <Loader2 className="size-3.5 animate-spin text-red-400" />
+                  ) : (
+                    <Trash2 className="size-3.5" />
+                  )}
+                  <span>{isDeleting ? "Deleting..." : "Delete Kit"}</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

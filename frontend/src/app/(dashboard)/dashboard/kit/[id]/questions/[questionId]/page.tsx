@@ -27,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useKitStore } from "@/hooks/use-kit-store";
 import KitLoading from "../../loading";
+import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UpdateQuestionDialog } from "@/components/question/update-question-dialog";
 import { DeleteQuestionDialog } from "@/components/question/delete-question-dialog";
 
@@ -211,14 +212,17 @@ export default function QuestionDetailPage() {
     <div className="flex flex-col gap-6 sm:gap-7 w-full text-white max-w-5xl mx-auto">
       {/* Top Header Row: Back Link and Next/Prev requirement navigation */}
       <div className="flex items-center justify-between gap-4">
-        {/* Left: Back Link */}
-        <Link
-          href={`/dashboard/kit/${kitId}/questions`}
-          className="flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition-colors cursor-pointer group select-none"
-        >
-          <ArrowLeft className="size-4 group-hover:-translate-x-0.5 transition-transform" />
-          <span>Back to Topics</span>
-        </Link>
+        {/* Left: Sidebar Trigger & Back Link */}
+        <div className="flex items-center gap-3">
+          <SidebarTrigger className="text-white/70 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0" />
+          <Link
+            href={`/dashboard/kit/${kitId}/questions`}
+            className="flex items-center gap-2 text-sm font-medium text-white/70 hover:text-white transition-colors cursor-pointer group select-none"
+          >
+            <ArrowLeft className="size-4 group-hover:-translate-x-0.5 transition-transform" />
+            <span>Back to Topics</span>
+          </Link>
+        </div>
 
         {/* Right: Next / Prev navigation restricted to this requirement */}
         <div className="flex items-center gap-2">

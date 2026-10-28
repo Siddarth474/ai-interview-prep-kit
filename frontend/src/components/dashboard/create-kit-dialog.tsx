@@ -41,7 +41,7 @@ export function CreateKitDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="fixed top-1/2 left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl bg-[#0e1111] border border-white/10 p-6 text-white shadow-2xl backdrop-blur-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="fixed top-1/2 left-1/2 z-50 grid w-[calc(100%-2rem)] sm:w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl bg-[#0e1111] border border-white/10 p-5 sm:p-6 text-white shadow-2xl backdrop-blur-xl max-h-[90vh] overflow-y-auto">
         <DialogHeader className="space-y-1.5 text-left">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-white/10 text-white">
