@@ -37,7 +37,7 @@ export const interviewKitService = {
       where: { id: kitId },
       include: {
         roleBreakdown: true,
-        flashcards: {
+        flashcards: { 
           orderBy: { position: "asc" },
           include: {
             progress: true,

@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.js";
 
 const JWT_SECRET =
-  process.env.JWT_SECRET || "default_jwt_secret_dev_key_change_in_prod";
+  process.env.ACCESS_TOKEN as string;
 
 export interface JwtPayload {
   userId: string;
@@ -31,7 +31,9 @@ export function authenticate(
         ? authHeader.split(" ")[1]
         : undefined;
 
-    const token = req.cookies?.token || tokenFromHeader;
+    // Try accessToken cookie first, then Authorization header, then legacy token cookie
+    const token =
+      req.cookies?.accessToken || tokenFromHeader;
 
     if (!token) {
       throw new ApiError("Authentication required", 401, "NO_TOKEN");
@@ -47,4 +49,4 @@ export function authenticate(
     }
     throw new ApiError("Invalid or expired token", 401, "INVALID_TOKEN");
   }
-} 
+}

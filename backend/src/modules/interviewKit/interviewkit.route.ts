@@ -9,5 +9,6 @@ kitRouter.use(authenticate);
 kitRouter.post("/", InterviewKitHandler.createKitHandler);
 kitRouter.get("/", InterviewKitHandler.getUserKitsHandler);
 kitRouter.get("/:kitId", InterviewKitHandler.getKitByIdHandler);
+kitRouter.delete("/:kitId", InterviewKitHandler.deleteKitHandler);
 
 export { kitRouter };

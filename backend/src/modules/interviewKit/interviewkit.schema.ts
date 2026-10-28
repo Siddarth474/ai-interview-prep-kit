@@ -7,3 +7,10 @@ export const createKitSchema = z.object({
 });
 
 export type CreateKitInput = z.infer<typeof createKitSchema>;
+
+export const deleteKitParamSchema = z.object({ 
+  kitId: z.string().min(1, "Kit ID is required"),
+});
+
+export type DeleteKitParams = z.infer<typeof deleteKitParamSchema>;
+ 

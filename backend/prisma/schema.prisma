@@ -22,11 +22,28 @@ model User {
   email        String @unique
   passwordHash String
 
-  kits InterviewKit[]
+  kits          InterviewKit[]
+  refreshTokens RefreshToken[]
   //flashcardProgress FlashcardProgress[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  hashToken    String   @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([hashToken])
 }
 
 model InterviewKit {

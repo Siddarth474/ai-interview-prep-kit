@@ -1,8 +1,8 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
 import { prisma } from "../../lib/prisma.js";
 import type { SignupInput, LoginInput, UserResponse } from "./auth.schema.js";
 import { ApiError } from "../../utils/ApiError.js";
+import { TokenService, type TokenPair } from "./token.service.js";
 
 export interface AuthResponse {
   user: {
@@ -12,10 +12,10 @@ export interface AuthResponse {
     createdAt: Date;
     updatedAt: Date;
   };
-  token: string;
+  accessToken: string;
+  refreshToken: string;
 }
 
-const JWT_SECRET = process.env.JWT_SECRET;
 const SALT_ROUNDS = Number(process.env.SALT_ROUNDS) || 12;
 
 export const AuthService = {
@@ -63,20 +63,17 @@ export const AuthService = {
       },
     });
 
-    // Generate JWT
-    const token = jwt.sign(
-      {
-        userId: newUser.id,
-        email: newUser.email,
-        username: newUser.username,
-      },
-      JWT_SECRET!,
-      { expiresIn: "7d" },
-    );
+    // Generate token pair (access + refresh)
+    const tokens: TokenPair = await TokenService.generateTokenPair({
+      userId: newUser.id,
+      email: newUser.email,
+      username: newUser.username,
+    });
 
     return {
       user: newUser,
-      token,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   },
 
@@ -119,16 +116,12 @@ export const AuthService = {
       throw new ApiError("Invalid password", 401, "INVALID_PASSWORD");
     }
 
-    // Generate JWT
-    const token = jwt.sign( 
-      {
-        userId: user.id,
-        email: user.email,
-        username: user.username,
-      },
-      JWT_SECRET!,
-      { expiresIn: "7d" },
-    );
+    // Generate token pair (access + refresh)
+    const tokens: TokenPair = await TokenService.generateTokenPair({
+      userId: user.id,
+      email: user.email,
+      username: user.username,
+    });
 
     const sanitizedUser = {
       id: user.id,
@@ -140,7 +133,8 @@ export const AuthService = {
 
     return {
       user: sanitizedUser,
-      token,
+      accessToken: tokens.accessToken,
+      refreshToken: tokens.refreshToken,
     };
   },
 
@@ -165,5 +159,22 @@ export const AuthService = {
 
   async getMe(userId: string): Promise<UserResponse> {
     return this.getCurrentUser(userId);
+  },
+
+  /**
+   * Handle user logout — revoke the provided refresh token
+   */
+  async logoutUser(refreshToken: string): Promise<{ message: string }> {
+    await TokenService.revokeRefreshToken(refreshToken);
+    return {
+      message: "Logged out successfully",
+    };
+  },
+
+  /**
+   * Refresh the access token using a valid refresh token (with rotation)
+   */
+  async refreshTokens(refreshToken: string): Promise<TokenPair> {
+    return TokenService.refreshAccessToken(refreshToken);
   },
 };
