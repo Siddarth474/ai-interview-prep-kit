@@ -15,11 +15,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { useCreateKit } from "@/hooks/use-create-kit";
+import type { KitData } from "@/services/kit.service";
 
 interface CreateKitDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (kit: any) => void;
+  onSuccess?: (kit: KitData) => void;
 }
 
 export function CreateKitDialog({

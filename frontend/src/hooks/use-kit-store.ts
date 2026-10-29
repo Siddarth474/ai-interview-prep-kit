@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import axios from "axios";
 import { kitService, type KitData } from "@/services/kit.service";
 
 interface KitStore {
@@ -33,8 +34,13 @@ export const useKitStore = create<KitStore>((set, get) => ({
       } else {
         set({ error: res.message || "Failed to load kit", loading: false });
       }
-    } catch (err: any) {
-      set({ error: err.message || "Something went wrong", loading: false });
+    } catch (err: unknown) {
+      const message =
+        (axios.isAxiosError(err) &&
+          (err.response?.data as { message?: string } | undefined)?.message) ||
+        (err instanceof Error ? err.message : null) ||
+        "Something went wrong";
+      set({ error: message, loading: false });
     }
   },
 

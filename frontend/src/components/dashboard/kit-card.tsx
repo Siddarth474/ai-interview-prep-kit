@@ -7,7 +7,6 @@ import {
   Zap,
   MoreVertical,
   ExternalLink,
-  Pencil,
   Trash2,
   Loader2,
 } from "lucide-react";
@@ -152,8 +151,8 @@ export function KitCard({
     if ((e.target as HTMLElement).closest("[data-no-card-click]")) {
       return;
     }
-    if (!isReady) {
-      onViewProgress ? onViewProgress(kit) : handleOpenKit();
+    if (!isReady && onViewProgress) {
+      onViewProgress(kit);
     } else {
       handleOpenKit();
     }
@@ -241,8 +240,8 @@ export function KitCard({
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();
-                    if (!isReady) {
-                      onViewProgress ? onViewProgress(kit) : handleOpenKit();
+                    if (!isReady && onViewProgress) {
+                      onViewProgress(kit);
                     } else {
                       handleOpenKit();
                     }

@@ -11,7 +11,6 @@ import {
 import {
   requirementOutputSchema,
   roleBreakdownOutputSchema,
-  type Requirement,
   type RequirementOutput,
   type RoleBreakdownOutput,
 } from "../requirement/requirement.schema.js";

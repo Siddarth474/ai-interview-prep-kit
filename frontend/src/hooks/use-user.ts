@@ -4,21 +4,22 @@ import { useState, useEffect } from "react";
 import { authService } from "@/services/auth.service";
 import type { User } from "@/types";
 
+function getStoredUser(): User | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const stored = localStorage.getItem("user");
+    return stored ? (JSON.parse(stored) as User) : null;
+  } catch {
+    return null;
+  }
+}
+
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(getStoredUser);
+  const [isLoading, setIsLoading] = useState(() => !getStoredUser());
 
   useEffect(() => {
     let isMounted = true;
-
-    // Read localStorage on mount to prevent SSR hydration mismatch
-    try {
-      const stored = localStorage.getItem("user");
-      if (stored && isMounted) {
-        setUser(JSON.parse(stored));
-        setIsLoading(false);
-      }
-    } catch {}
 
     async function fetchUser() {
       try {

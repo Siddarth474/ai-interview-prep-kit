@@ -5,7 +5,7 @@ import { ApiError } from "../../utils/ApiError.js";
 
 export const studyScheduleHandler = {
   async toggleDayCompletionHandler(
-    req: Request<{ kitId: string; dayNumber: string }, any, { completed?: boolean }>,
+    req: Request<{ kitId: string; dayNumber: string }, unknown, { completed?: boolean }>,
     res: Response,
     next: NextFunction,
   ) {

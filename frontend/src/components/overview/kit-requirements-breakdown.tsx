@@ -3,7 +3,7 @@
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Code2, Users, Briefcase } from "lucide-react";
-import type { KitData } from "@/services/kit.service";
+import type { KitData, KitRequirement } from "@/services/kit.service";
 
 interface KitRequirementsBreakdownProps {
   kit?: KitData | null;
@@ -13,32 +13,25 @@ export function KitRequirementsBreakdown({
   kit,
 }: KitRequirementsBreakdownProps) {
   // If kit.requirements is available, calculate counts dynamically
-  const reqs = Array.isArray(kit?.requirements) ? kit.requirements : [];
+  const reqs: KitRequirement[] = Array.isArray(kit?.requirements) ? kit.requirements : [];
 
   const technicalCount =
-    reqs.filter(
-      (r: any) =>
-        r.category === "TECHNICAL" ||
-        r.category === "technical" ||
-        r.type === "technical"
-    ).length || 8;
+    reqs.filter((r: KitRequirement) => {
+      const cat = (r.category || (r.type as string) || "").toUpperCase();
+      return cat === "TECHNICAL";
+    }).length || 8;
 
   const behavioralCount =
-    reqs.filter(
-      (r: any) =>
-        r.category === "BEHAVIORAL" ||
-        r.category === "behavioral" ||
-        r.type === "behavioral"
-    ).length || 2;
+    reqs.filter((r: KitRequirement) => {
+      const cat = (r.category || (r.type as string) || "").toUpperCase();
+      return cat === "BEHAVIORAL";
+    }).length || 2;
 
   const roleSpecificCount =
-    reqs.filter(
-      (r: any) =>
-        r.category === "ROLE_SPECIFIC" ||
-        r.category === "role_specific" ||
-        r.category === "ROLE" ||
-        r.type === "role_specific"
-    ).length || 2;
+    reqs.filter((r: KitRequirement) => {
+      const cat = (r.category || (r.type as string) || "").toUpperCase();
+      return cat === "ROLE_SPECIFIC" || cat === "ROLE";
+    }).length || 2;
 
   const total = technicalCount + behavioralCount + roleSpecificCount || 12;
 

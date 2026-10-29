@@ -4,10 +4,11 @@ import React, { useState } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateKitDialog } from "./create-kit-dialog";
+import type { KitData } from "@/services/kit.service";
 
 interface KitsHeaderProps {
   onCreateKit?: () => void;
-  onKitCreated?: (kit: any) => void;
+  onKitCreated?: (kit: KitData) => void;
 }
 
 export function KitsHeader({ onCreateKit, onKitCreated }: KitsHeaderProps) {

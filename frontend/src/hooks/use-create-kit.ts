@@ -1,9 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { kitService, type CreateKitPayload } from "@/services/kit.service";
+import axios from "axios";
+import {
+  kitService,
+  type CreateKitPayload,
+  type KitData,
+} from "@/services/kit.service";
 
 interface UseCreateKitOptions {
   onOpenChange: (open: boolean) => void;
-  onSuccess?: (kit: any) => void;
+  onSuccess?: (kit: KitData) => void;
 }
 
 export function useCreateKit({
@@ -75,11 +80,12 @@ export function useCreateKit({
       } else {
         setError(res.message || "Failed to create kit. Please try again.");
       }
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message ||
-          "Failed to generate kit. Please check your inputs and try again.",
-      );
+    } catch (err: unknown) {
+      const message =
+        (axios.isAxiosError(err) &&
+          (err.response?.data as { message?: string } | undefined)?.message) ||
+        "Failed to generate kit. Please check your inputs and try again.";
+      setError(message);
     } finally {
       setIsLoading(false);
     }

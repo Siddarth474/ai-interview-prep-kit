@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import axios from "axios";
 import {
   flashcardService,
   type FlashcardStatus,
@@ -29,10 +30,11 @@ export function useFlashcard() {
           throw new Error(res.message || "Failed to review flashcard");
         }
         return res.data;
-      } catch (err: any) {
+      } catch (err: unknown) {
         const message =
-          err?.response?.data?.message ||
-          err?.message ||
+          (axios.isAxiosError(err) &&
+            (err.response?.data as { message?: string } | undefined)?.message) ||
+          (err instanceof Error ? err.message : null) ||
           "Failed to review flashcard";
         setError(message);
         return null;

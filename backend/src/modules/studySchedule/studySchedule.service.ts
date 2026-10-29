@@ -53,7 +53,7 @@ export const studyScheduleService = {
         importance: r.importance,
         questionCount: r.questions.length,
       })),
-      kit?.daysAvailable!,
+      kit?.daysAvailable ?? 14,
     );
 
     //console.log("Schedule: ", JSON.stringify(schedule, null, 2));

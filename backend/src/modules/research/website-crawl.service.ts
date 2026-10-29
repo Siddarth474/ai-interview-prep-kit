@@ -64,7 +64,7 @@ export const WebsiteCrawlerService = {
       const visited = new Set<string>();
       const pages: CrawledPage[] = [];
 
-      let queue: { url: string; score: number; depth: number }[] = [
+      const queue: { url: string; score: number; depth: number }[] = [
         {
           url: start.href,
           score: 100,

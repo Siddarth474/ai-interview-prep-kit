@@ -1,5 +1,6 @@
 import { api } from "@/lib/api";
 import type { ApiResponse } from "@/types";
+import type { Flashcard } from "./flashcard.service";
 
 export interface CreateKitPayload {
   companyUrl: string;
@@ -43,11 +44,41 @@ export interface RoleBreakdown {
   id?: string;
   kitId?: string;
   roleTitle?: string | null;
-  responsibilities?: string[] | any;
-  requiredSkills?: string[] | any;
-  technologies?: string[] | any;
+  responsibilities?: string[];
+  requiredSkills?: string[];
+  technologies?: string[];
   createdAt?: string | Date;
   updatedAt?: string | Date;
+}
+
+export interface KitQuestion {
+  id?: string;
+  position?: number;
+  question: string;
+  answer?: string;
+  guidance?: string;
+  category?: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | "COMPANY" | "SYSTEM_DESIGN" | string;
+  difficulty?: "EASY" | "MEDIUM" | "HARD" | string;
+  requirementId?: string | null;
+  requirement?: {
+    id?: string;
+    topic?: string;
+    text?: string;
+    category?: string;
+  } | null;
+  [key: string]: unknown;
+}
+
+export interface KitRequirement {
+  id?: string;
+  kitId?: string;
+  topic?: string;
+  text: string;
+  category?: string;
+  importance?: string;
+  position?: number;
+  questions?: KitQuestion[];
+  [key: string]: unknown;
 }
 
 export interface KitData {
@@ -56,40 +87,63 @@ export interface KitData {
   company?: string;
   companyName?: string | null;
   companyUrl?: string;
+  role?: string | null;
+  roleTitle?: string | null;
   jobDescription?: string;
   createdAt?: string | Date;
   updatedAt?: string | Date;
   progress?: number;
-  requirements?: any[];
+  requirements?: KitRequirement[];
   roleBreakdown?: RoleBreakdown | null;
+  questions?: KitQuestion[];
   questionsCount?: number;
-  flashcards?: any;
+  flashcards?: Flashcard[];
   flashcardsCount?: number;
   daysAvailable?: number;
   daysCount?: number;
   status?: string;
   studySchedule?: StudySchedule | null;
-  [key: string]: any;
+  studyPlan?: StudySchedule | null;
+  [key: string]: unknown;
+}
+
+export interface GetKitsResponse {
+  kits?: KitData[];
+  [key: string]: unknown;
+}
+
+export interface DeleteKitResponse {
+  message?: string;
+  id?: string;
+  [key: string]: unknown;
+}
+
+export interface ToggleDayCompletionResponse {
+  dayNumber?: number;
+  completed?: boolean;
+  progress?: number;
+  studySchedule?: StudySchedule | null;
+  [key: string]: unknown;
 }
 
 export const kitService = {
-  async createKit(payload: CreateKitPayload): Promise<ApiResponse<any>> {
-    const response = await api.post<ApiResponse<any>>("/kits", payload);
+  async createKit(payload: CreateKitPayload): Promise<ApiResponse<KitData>> {
+    const response = await api.post<ApiResponse<KitData>>("/kits", payload);
     return response.data;
   },
 
-  async getKit(kitId: string): Promise<ApiResponse<any>> {
-    const response = await api.get<ApiResponse<any>>(`/kits/${kitId}`);
+  async getKit(kitId: string): Promise<ApiResponse<KitData>> {
+    const response = await api.get<ApiResponse<KitData>>(`/kits/${kitId}`);
     return response.data;
   },
 
-  async getKits(): Promise<ApiResponse<any>> {
-    const response = await api.get<ApiResponse<any>>(`/kits`);
+  async getKits(): Promise<ApiResponse<GetKitsResponse>> {
+    const response = await api.get<ApiResponse<GetKitsResponse>>("/kits");
     return response.data;
   },
 
-  async deleteKit(kitId: string): Promise<ApiResponse<any>> {
-    const response = await api.delete<ApiResponse<any>>(`/kits/${kitId}`);
+  async deleteKit(kitId: string): Promise<ApiResponse<DeleteKitResponse>> {
+    const response = await api.delete<ApiResponse<DeleteKitResponse>>(`/kits/${kitId}`);
     return response.data;
   },
 
@@ -97,8 +151,8 @@ export const kitService = {
     kitId: string,
     dayNumber: number,
     completed?: boolean,
-  ): Promise<ApiResponse<any>> {
-    const response = await api.patch<ApiResponse<any>>(
+  ): Promise<ApiResponse<ToggleDayCompletionResponse>> {
+    const response = await api.patch<ApiResponse<ToggleDayCompletionResponse>>(
       `/kits/${kitId}/schedule/days/${dayNumber}/complete`,
       { completed },
     );

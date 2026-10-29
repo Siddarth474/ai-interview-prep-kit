@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../utils/ApiError.js";
+import type { Prisma } from "../../../generated/prisma/client.js";
 import { researchQueue } from "../../config/queue.js";
 import type { CreateKitInput } from "./interviewkit.schema.js";
 import type { KitStatus } from "../../../generated/prisma/enums.js";
@@ -130,7 +131,7 @@ export const interviewKitService = {
       schedule?.days?.reduce((acc, d) => acc + d.topics.length, 0) || 0;
     const completedTopics =
       schedule?.days?.reduce(
-        (acc, d) => acc + d.topics.filter((t: any) => t.completed).length,
+        (acc, d) => acc + d.topics.filter((t) => t.completed).length,
         0,
       ) || 0;
     const progress =
@@ -253,7 +254,7 @@ export const interviewKitService = {
     return { deleted: true };
   },
 
-  async updateKitStatus(kitId: string, status: KitStatus, tx?: any) {
+  async updateKitStatus(kitId: string, status: KitStatus, tx?: Prisma.TransactionClient) {
     const client = tx ?? prisma;
     return await client.interviewKit.update({
       where: { id: kitId },

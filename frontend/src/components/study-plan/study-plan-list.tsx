@@ -16,6 +16,7 @@ import {
   kitService,
   type StudyScheduleDay,
   type StudyScheduleTopic,
+  type KitRequirement,
 } from "@/services/kit.service";
 import { useKitStore } from "@/hooks/use-kit-store";
 
@@ -37,7 +38,7 @@ export function getDayDateLabel(
 
 function findQuestionId(
   topics: StudyScheduleTopic[] = [],
-  requirements: any[] = [],
+  requirements: KitRequirement[] = [],
 ): string | undefined {
   for (const t of topics) {
     if (t.requirement?.questions?.[0]?.id) {
@@ -61,7 +62,7 @@ function mapDayToItem(
   prevDay: StudyScheduleDay | undefined,
   unlockedDays: Record<number, boolean>,
   createdAt?: string | Date,
-  requirements?: any[],
+  requirements?: KitRequirement[],
 ): StudyPlanDayItem {
   const topics = day.topics || [];
   const hasTopics = topics.length > 0;
@@ -118,7 +119,7 @@ interface StudyPlanListProps {
   kitId: string;
   days?: StudyScheduleDay[];
   createdAt?: string | Date;
-  requirements?: any[];
+  requirements?: KitRequirement[];
 }
 
 export function StudyPlanList({

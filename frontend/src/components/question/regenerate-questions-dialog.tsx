@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Loader2, RotateCw, Sparkles, Clock, AlertCircle } from "lucide-react";
 import {
   Dialog,
@@ -62,24 +62,29 @@ export function RegenerateQuestionsDialog({
   const { regenerateQuestions, isLoading, error, setError } = useQuestion();
   const { fetchKit } = useKitStore();
 
-  const [mode, setMode] = useState<"category" | "topic">("category");
-  const [selectedCategory, setSelectedCategory] = useState<string>("TECHNICAL");
-  const [selectedTopicId, setSelectedTopicId] = useState<string>("");
+  const getInitialCategory = () =>
+    defaultCategory && defaultCategory !== "ALL"
+      ? defaultCategory.toUpperCase()
+      : "TECHNICAL";
 
-  useEffect(() => {
+  const [mode, setMode] = useState<"category" | "topic">("category");
+  const [selectedCategory, setSelectedCategory] = useState<string>(getInitialCategory);
+  const [selectedTopicId, setSelectedTopicId] = useState<string>(
+    () => (requirements.length > 0 && requirements[0].id) || ""
+  );
+  const [prevOpen, setPrevOpen] = useState(open);
+
+  if (open !== prevOpen) {
+    setPrevOpen(open);
     if (open) {
-      const initialCat =
-        defaultCategory && defaultCategory !== "ALL"
-          ? defaultCategory.toUpperCase()
-          : "TECHNICAL";
-      setSelectedCategory(initialCat);
+      setSelectedCategory(getInitialCategory());
       setMode("category");
       if (requirements.length > 0 && requirements[0].id) {
         setSelectedTopicId(requirements[0].id);
       }
       setError(null);
     }
-  }, [open, defaultCategory, requirements, setError]);
+  }
 
   const handleConfirmRegenerate = async () => {
     if (mode === "topic") {

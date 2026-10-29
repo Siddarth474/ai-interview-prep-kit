@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
+import jwt, { type SignOptions } from "jsonwebtoken";
 import { prisma } from "../../lib/prisma.js";
 import { ApiError } from "../../utils/ApiError.js";
 
@@ -36,7 +36,7 @@ export const TokenService = {
    */
   generateAccessToken(payload: AccessTokenPayload): string {
     return jwt.sign(payload, ACCESS_TOKEN_SECRET, {
-      expiresIn: ACCESS_TOKEN_EXPIRY as any,
+      expiresIn: ACCESS_TOKEN_EXPIRY as NonNullable<SignOptions["expiresIn"]>,
     });
   },
 
@@ -61,7 +61,7 @@ export const TokenService = {
   async generateRefreshToken(userId: string): Promise<string> {
     // 1. Create a signed JWT refresh token
     const refreshToken = jwt.sign({ userId }, REFRESH_TOKEN_SECRET, {
-      expiresIn: REFRESH_TOKEN_EXPIRY as any,
+      expiresIn: REFRESH_TOKEN_EXPIRY as NonNullable<SignOptions["expiresIn"]>,
     });
 
     // 2. Hash with bcrypt before storing in database

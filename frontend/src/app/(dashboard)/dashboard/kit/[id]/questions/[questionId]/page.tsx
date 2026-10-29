@@ -10,6 +10,7 @@ import {
   Pencil,
   MoreVertical,
   Copy,
+  Check,
   Trash2,
   HelpCircle,
 } from "lucide-react";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useKitStore } from "@/hooks/use-kit-store";
+import type { KitRequirement, KitQuestion } from "@/services/kit.service";
 import KitLoading from "../../loading";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UpdateQuestionDialog } from "@/components/question/update-question-dialog";
@@ -35,7 +37,7 @@ interface QuestionItem {
   id?: string;
   position?: number;
   question: string;
-  answer: string;
+  answer?: string;
   category: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | string;
   difficulty: "EASY" | "MEDIUM" | "HARD" | string;
   guidance?: string;
@@ -65,12 +67,16 @@ export default function QuestionDetailPage() {
     }
   }, [kitId, fetchKit]);
 
+  const requirements = kit?.requirements;
+
   // Extract all questions directly from requirements
   const questionsList: QuestionItem[] = useMemo(() => {
-    if (!Array.isArray(kit?.requirements)) return [];
-    return kit.requirements.flatMap((r: any) =>
-      (r.questions || []).map((q: any) => ({
+    if (!Array.isArray(requirements)) return [];
+    return requirements.flatMap((r: KitRequirement) =>
+      (r.questions || []).map((q: KitQuestion) => ({
         ...q,
+        category: q.category || "TECHNICAL",
+        difficulty: q.difficulty || "MEDIUM",
         requirementId: q.requirementId || r.id,
         requirement: q.requirement || {
           id: r.id,
@@ -80,7 +86,7 @@ export default function QuestionDetailPage() {
         },
       })),
     );
-  }, [kit?.requirements]);
+  }, [requirements]);
 
   // Find target question from questions list (or null if not found)
   const currentQuestion: QuestionItem | null = useMemo(() => {
@@ -359,7 +365,6 @@ export default function QuestionDetailPage() {
             <span>Edit</span>
           </Button>
 
-
           {/* Delete Button - Visible on >= sm */}
           <Button
             variant="outline"
@@ -391,8 +396,12 @@ export default function QuestionDetailPage() {
                 onClick={handleCopyQuestion}
                 className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-white/80 hover:text-white hover:bg-white/10 rounded-lg cursor-pointer transition-colors"
               >
-                <Copy className="size-3.5" />
-                <span>Copy Question</span>
+                {copied ? (
+                  <Check className="size-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="size-3.5" />
+                )}
+                <span>{copied ? "Copied!" : "Copy Question"}</span>
               </DropdownMenuItem>
 
               {/* Mobile-only Edit Option */}
@@ -440,7 +449,9 @@ export default function QuestionDetailPage() {
         {/* Content Box */}
         <Card className="rounded-2xl rounded-tl-none border border-white/10 bg-[#0d1010] p-6 sm:p-7 shadow-xl min-h-40">
           <TabsContent value="answer" className="mt-0 outline-none">
-            <div className="min-h-25 flex items-center justify-center text-white text-xs sm:text-sm italic">{currentQuestion.answer}</div>
+            <div className="min-h-25 flex items-center justify-center text-white text-xs sm:text-sm italic">
+              {currentQuestion.answer}
+            </div>
           </TabsContent>
 
           <TabsContent value="guidance" className="mt-0 outline-none">

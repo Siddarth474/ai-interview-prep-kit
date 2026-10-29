@@ -65,6 +65,8 @@ export async function findRelevantChunks(
     return results;
   } catch (error) {
     console.error("[Retrieval Error]: Failed to find relevant chunks:", error);
-    throw new Error("Failed to retrieve relevant context. Please try again.");
+    throw new Error("Failed to retrieve relevant context. Please try again.", {
+      cause: error,
+    });
   }
 }

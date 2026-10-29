@@ -49,7 +49,7 @@ function redirectToLogin() {
       !window.location.pathname.startsWith("/login") &&
       !window.location.pathname.startsWith("/signup")
     ) {
-      window.location.href = "/login";
+      window.location.replace("/login");
     }
   }
 }
@@ -117,7 +117,7 @@ api.interceptors.response.use(
       useServerError
         .getState()
         .setServerError(
-          (error.response.data as any)?.message ||
+          (error.response.data as { message?: string } | undefined)?.message ||
             "An unexpected internal server error (500) occurred on the backend.",
           error.response.status,
         );

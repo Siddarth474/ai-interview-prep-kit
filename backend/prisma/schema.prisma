@@ -62,7 +62,7 @@ model InterviewKit {
 
   researchSources ResearchSource[]
   requirements    Requirement[]
-  // companyBrief    CompanyBrief?
+  companyBrief    CompanyBrief?
   roleBreakdown   RoleBreakdown?
   questions       Question[]
   studySchedule StudySchedule? 
@@ -121,6 +121,23 @@ model ResearchChunk {
   createdAt DateTime @default(now())
 
   @@index([researchSourceId])
+}
+
+model CompanyBrief {
+  id String @id @default(cuid())
+
+  kitId String @unique
+  kit   InterviewKit @relation(fields: [kitId], references: [id], onDelete: Cascade)
+
+  companyName String
+  overview    String
+  industry    String?
+  products    Json?
+  culture     Json?
+  hiringInfo  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 enum RequirementImportance {

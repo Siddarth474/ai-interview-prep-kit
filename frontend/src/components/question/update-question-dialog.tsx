@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Loader2, Pencil } from "lucide-react";
 import {
   Dialog,
@@ -20,9 +20,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import { useQuestion } from "@/hooks/use-question";
 import { useKitStore } from "@/hooks/use-kit-store";
+import type { KitData, KitRequirement, KitQuestion } from "@/services/kit.service";
 
 export interface QuestionData {
   id?: string;
@@ -48,7 +48,24 @@ interface UpdateQuestionDialogProps {
   onSuccess?: (updated: QuestionData) => void;
 }
 
-const CATEGORIES: { label: string; value: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" }[] = [
+type CategoryType = "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC";
+type DifficultyType = "EASY" | "MEDIUM" | "HARD";
+
+function parseCategory(category?: string): CategoryType {
+  const upper = (category || "").toUpperCase();
+  if (upper === "BEHAVIORAL") return "BEHAVIORAL";
+  if (upper === "ROLE_SPECIFIC" || upper === "ROLE") return "ROLE_SPECIFIC";
+  return "TECHNICAL";
+}
+
+function parseDifficulty(difficulty?: string): DifficultyType {
+  const upper = (difficulty || "").toUpperCase();
+  if (upper === "EASY") return "EASY";
+  if (upper === "HARD") return "HARD";
+  return "MEDIUM";
+}
+
+const CATEGORIES: { label: string; value: CategoryType }[] = [
   { label: "Technical", value: "TECHNICAL" },
   { label: "Behavioral", value: "BEHAVIORAL" },
   { label: "Role Specific", value: "ROLE_SPECIFIC" },
@@ -56,7 +73,7 @@ const CATEGORIES: { label: string; value: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPE
 
 const DIFFICULTIES: {
   label: string;
-  value: "EASY" | "MEDIUM" | "HARD";
+  value: DifficultyType;
   dotClass: string;
 }[] = [
   { label: "Easy", value: "EASY", dotClass: "bg-emerald-400" },
@@ -74,24 +91,34 @@ export function UpdateQuestionDialog({
   const { updateQuestion, isLoading, error, setError } = useQuestion();
   const { kit, updateKit } = useKitStore();
 
-  const [formData, setFormData] = useState({
-    question: "",
-    guidance: "",
-    category: "TECHNICAL" as "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC",
-    difficulty: "MEDIUM" as "EASY" | "MEDIUM" | "HARD",
-  });
+  const [formData, setFormData] = useState<{
+    question: string;
+    guidance: string;
+    category: CategoryType;
+    difficulty: DifficultyType;
+  }>(() => ({
+    question: question?.question || "",
+    guidance: question?.guidance || "",
+    category: parseCategory(question?.category),
+    difficulty: parseDifficulty(question?.difficulty),
+  }));
 
-  useEffect(() => {
+  const [prevOpen, setPrevOpen] = useState(open);
+  const [prevQuestionId, setPrevQuestionId] = useState(question?.id);
+
+  if (open !== prevOpen || question?.id !== prevQuestionId) {
+    setPrevOpen(open);
+    setPrevQuestionId(question?.id);
     if (open && question) {
       setFormData({
         question: question.question || "",
         guidance: question.guidance || "",
-        category: (question.category as any) || "TECHNICAL",
-        difficulty: (question.difficulty as any) || "MEDIUM",
+        category: parseCategory(question.category),
+        difficulty: parseDifficulty(question.difficulty),
       });
       setError(null);
     }
-  }, [open, question, setError]);
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -117,13 +144,13 @@ export function UpdateQuestionDialog({
 
       // Update in kit store for instant optimistic UI update
       if (kit) {
-        const updatePayload: any = {};
+        const updatePayload: Partial<KitData> = {};
 
         if (Array.isArray(kit.requirements)) {
-          updatePayload.requirements = kit.requirements.map((r: any) => ({
+          updatePayload.requirements = kit.requirements.map((r: KitRequirement) => ({
             ...r,
             questions: Array.isArray(r.questions)
-              ? r.questions.map((q: any) =>
+              ? r.questions.map((q: KitQuestion) =>
                   q.id === questionId ? { ...q, ...updated, ...formData } : q
                 )
               : r.questions,
@@ -131,7 +158,7 @@ export function UpdateQuestionDialog({
         }
 
         if (Array.isArray(kit.questions)) {
-          updatePayload.questions = kit.questions.map((q: any) =>
+          updatePayload.questions = kit.questions.map((q: KitQuestion) =>
             q.id === questionId ? { ...q, ...updated, ...formData } : q
           );
         }
@@ -202,7 +229,7 @@ export function UpdateQuestionDialog({
               <Select
                 value={formData.category}
                 onValueChange={(val) => {
-                  if (val) setFormData((prev) => ({ ...prev, category: val as any }));
+                  if (val) setFormData((prev) => ({ ...prev, category: val as CategoryType }));
                 }}
               >
                 <SelectTrigger
@@ -233,7 +260,7 @@ export function UpdateQuestionDialog({
               <Select
                 value={formData.difficulty}
                 onValueChange={(val) => {
-                  if (val) setFormData((prev) => ({ ...prev, difficulty: val as any }));
+                  if (val) setFormData((prev) => ({ ...prev, difficulty: val as DifficultyType }));
                 }}
               >
                 <SelectTrigger

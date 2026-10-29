@@ -57,15 +57,21 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
     if (card.id) {
       const currentKit = useKitStore.getState().kit;
       if (currentKit && Array.isArray(currentKit.flashcards)) {
-        const updatedFlashcards = currentKit.flashcards.map((f: any) =>
+        const updatedFlashcards = currentKit.flashcards.map((f: Flashcard) =>
           f.id === card.id
             ? {
                 ...f,
-                progress: {
-                  ...(f.progress || {}),
-                  status,
-                },
-                status,
+                progress: f.progress
+                  ? { ...f.progress, status }
+                  : {
+                      id: f.id,
+                      flashcardId: f.id,
+                      userId: "",
+                      status,
+                      reviewCount: 1,
+                      createdAt: new Date().toISOString(),
+                      updatedAt: new Date().toISOString(),
+                    },
               }
             : f
         );
@@ -77,21 +83,18 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
 
     setReviewingAction(status);
     try {
-      const responseData = (await reviewFlashcard(kitId, card.id, status)) as any;
-      const updatedProgress: FlashcardProgress | null =
-        responseData?.progress ?? responseData ?? null;
+      const updatedProgress = await reviewFlashcard(kitId, card.id, status);
       if (updatedProgress?.status) {
         setProgress(updatedProgress);
         setReviewedStatus(updatedProgress.status);
         if (card.id) {
           const currentKit = useKitStore.getState().kit;
           if (currentKit && Array.isArray(currentKit.flashcards)) {
-            const updatedFlashcards = currentKit.flashcards.map((f: any) =>
+            const updatedFlashcards = currentKit.flashcards.map((f: Flashcard) =>
               f.id === card.id
                 ? {
                     ...f,
                     progress: updatedProgress,
-                    status: updatedProgress.status,
                   }
                 : f
             );

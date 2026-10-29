@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import type { KitData } from "@/services/kit.service";
 import { kitService } from "@/services/kit.service";
 
@@ -18,7 +19,56 @@ export function useDashboardKits() {
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // Fetch all kits on mount or retry
+  // Initial load on mount
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadKits() {
+      try {
+        const res = await kitService.getKits();
+        if (isMounted && res.success) {
+          const kitsList = Array.isArray(res.data?.kits)
+            ? res.data.kits
+            : Array.isArray(res.data)
+            ? res.data
+            : [];
+          setKits(kitsList);
+        }
+      } catch (error: unknown) {
+        if (isMounted) {
+          if (axios.isAxiosError(error)) {
+            if (!error.response) {
+              setServerError(
+                "Backend server is currently unreachable. Please ensure the backend is running on http://localhost:5000."
+              );
+            } else if (error.response.status >= 500) {
+              const data = error.response.data as { message?: string } | undefined;
+              setServerError(
+                data?.message || "Internal server error (500) occurred on backend."
+              );
+            } else {
+              const data = error.response.data as { message?: string } | undefined;
+              setServerError(data?.message || "Failed to fetch kits.");
+            }
+          } else {
+            setServerError("Failed to fetch kits.");
+          }
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    loadKits();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  // Manual refetch for user retry action
   const fetchKits = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -32,29 +82,30 @@ export function useDashboardKits() {
           : [];
         setKits(kitsList);
       }
-    } catch (error: any) {
-      if (!error.response) {
-        setServerError(
-          "Backend server is currently unreachable. Please ensure the backend is running on http://localhost:5000."
-        );
-      } else if (error.response.status >= 500) {
-        setServerError(
-          error.response?.data?.message ||
-            "Internal server error (500) occurred on backend."
-        );
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        if (!error.response) {
+          setServerError(
+            "Backend server is currently unreachable. Please ensure the backend is running on http://localhost:5000."
+          );
+        } else if (error.response.status >= 500) {
+          const data = error.response.data as { message?: string } | undefined;
+          setServerError(
+            data?.message || "Internal server error (500) occurred on backend."
+          );
+        } else {
+          const data = error.response.data as { message?: string } | undefined;
+          setServerError(data?.message || "Failed to fetch kits.");
+        }
       } else {
-        setServerError(error.response?.data?.message || "Failed to fetch kits.");
+        setServerError("Failed to fetch kits.");
       }
     } finally {
       setIsLoading(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchKits();
-  }, [fetchKits]);
-
-  const handleKitCreated = (newKit: any) => {
+  const handleKitCreated = (newKit: KitData) => {
     setKits((prev) => [newKit, ...prev]);
     if (newKit?.id) {
       setActiveKitId(newKit.id);

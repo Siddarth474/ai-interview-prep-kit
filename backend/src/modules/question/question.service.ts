@@ -3,6 +3,7 @@ import type {
   QuestionCategory,
 } from "../../../generated/prisma/enums.js";
 import { prisma } from "../../lib/prisma.js";
+import type { Prisma } from "../../../generated/prisma/client.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { aiService } from "../ai/ai.service.js";
 import type {
@@ -25,7 +26,7 @@ export const questionService = {
     kitId: string,
     questions: QuestionInput[],
     requirementId: string,
-    tx?: any,
+    tx?: Prisma.TransactionClient,
   ) {
     const client = tx ?? prisma;
     await client.question.createMany({
@@ -222,8 +223,6 @@ export const questionService = {
       },
       orderBy: { position: "asc" },
     });
-
-    const protectedQuestions = questions.filter((q) => q.isEdited);
 
     const regeneratableQuestions = questions.filter((q) => !q.isEdited);
 

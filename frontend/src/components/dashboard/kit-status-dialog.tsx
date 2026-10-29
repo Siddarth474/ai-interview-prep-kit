@@ -6,7 +6,7 @@ import {
   Loader2,
   Sparkles,
   AlertCircle,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import {
   Dialog,
@@ -28,6 +28,13 @@ interface KitStatusDialogProps {
   onOpenKit?: (kitId: string) => void;
 }
 
+function getInitialProgress(status?: string | null): number {
+  if (status === "COMPLETED") return 100;
+  if (status === "GENERATING") return 75;
+  if (status === "RESEARCHING") return 50;
+  return 25;
+}
+
 export function KitStatusDialog({
   open,
   onOpenChange,
@@ -37,10 +44,32 @@ export function KitStatusDialog({
   onOpenKit,
 }: KitStatusDialogProps) {
   const [kit, setKit] = useState<KitData | null>(initialKit || null);
-  const [status, setStatus] = useState<string>("CREATED");
-  const [progress, setProgress] = useState<number>(25);
+  const [status, setStatus] = useState<string>(initialKit?.status || "CREATED");
+  const [progress, setProgress] = useState<number>(() =>
+    getInitialProgress(initialKit?.status),
+  );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [prevKitId, setPrevKitId] = useState<string | null>(kitId);
+  const [prevOpen, setPrevOpen] = useState(open);
+
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const onKitReadyRef = useRef(onKitReady);
+
+  useEffect(() => {
+    onKitReadyRef.current = onKitReady;
+  });
+
+  // Adjust state when dialog is opened or kitId changes (official React pattern)
+  if (kitId !== prevKitId || open !== prevOpen) {
+    setPrevKitId(kitId);
+    setPrevOpen(open);
+    if (open) {
+      setStatus(initialKit?.status || "CREATED");
+      setProgress(getInitialProgress(initialKit?.status));
+      setErrorMessage(null);
+      setKit(initialKit || null);
+    }
+  }
 
   const stopPolling = () => {
     if (pollTimerRef.current) {
@@ -55,38 +84,25 @@ export function KitStatusDialog({
       return;
     }
 
-    // Initialize state
-    setStatus(initialKit?.status || "CREATED");
-    setProgress(
-      initialKit?.status === "COMPLETED"
-        ? 100
-        : initialKit?.status === "GENERATING"
-          ? 75
-          : initialKit?.status === "RESEARCHING"
-            ? 50
-            : 25,
-    );
-    setErrorMessage(null);
-    if (initialKit) {
-      setKit(initialKit);
-    }
+    let isSubscribed = true;
 
     const pollStatus = async () => {
       try {
         const res = await kitService.getKit(kitId);
+        if (!isSubscribed) return;
+
         if (res.success && res.data) {
-          const fetched = res.data as KitData;
+          const fetched = res.data;
           setKit(fetched);
           const currentStatus = fetched.status || "CREATED";
           setStatus(currentStatus);
 
-          const isReady =
-            currentStatus === "COMPLETED";
+          const isReady = currentStatus === "COMPLETED";
 
           if (isReady) {
             setProgress(100);
             stopPolling();
-            onKitReady?.(fetched);
+            onKitReadyRef.current?.(fetched);
           } else if (currentStatus === "FAILED") {
             stopPolling();
             setErrorMessage(
@@ -101,7 +117,7 @@ export function KitStatusDialog({
             setProgress((prev) => (prev < 45 ? prev + 5 : prev));
           }
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Failed to poll kit status:", err);
       }
     };
@@ -113,6 +129,7 @@ export function KitStatusDialog({
     pollTimerRef.current = setInterval(pollStatus, 2500);
 
     return () => {
+      isSubscribed = false;
       stopPolling();
     };
   }, [open, kitId]);
@@ -130,126 +147,102 @@ export function KitStatusDialog({
     return "Analyzing job description and preparing timeline...";
   };
 
-  const getTargetTitle = () => {
-    if (kit?.companyName) return kit.companyName;
-    if (kit?.companyUrl) {
-      try {
-        const host = new URL(kit.companyUrl).hostname.replace(/^www\./, "");
-        const name = host.split(".")[0];
-        return name.charAt(0).toUpperCase() + name.slice(1);
-      } catch {
-        // fallback
-      }
-    }
-    return "Interview Kit";
-  };
+  const companyName =
+    kit?.company || kit?.companyName || "Company Preparation";
+  const roleName = kit?.roleTitle || kit?.role || "Interview Kit";
 
-  const handleOpenClick = () => {
-    if (kitId) {
-      onOpenKit?.(kitId);
+  const handleAction = () => {
+    if (isCompleted && kitId && onOpenKit) {
+      onOpenChange(false);
+      onOpenKit(kitId);
+    } else {
+      onOpenChange(false);
     }
-    onOpenChange(false);
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed top-1/2 left-1/2 z-50 grid w-full max-w-md -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl bg-[#0e1111] border border-white/10 p-6 text-white shadow-2xl backdrop-blur-xl">
-        <DialogHeader className="space-y-1.5 text-left">
-          <div className="flex items-center gap-2.5">
-            <div
-              className={`flex size-8 items-center justify-center rounded-xl transition-colors ${
-                isCompleted
-                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/25"
-                  : isFailed
-                    ? "bg-red-500/15 text-red-400 border border-red-500/25"
-                    : "bg-white/10 text-white border border-white/10"
-              }`}
-            >
+      <DialogContent className="sm:max-w-md bg-[#131515] border-white/10 text-white rounded-2xl p-6 sm:p-7 shadow-2xl">
+        <DialogHeader className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="size-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
               {isCompleted ? (
-                <CheckCircle2 className="size-4" />
+                <CheckCircle2 className="size-6 text-emerald-400" />
               ) : isFailed ? (
-                <AlertCircle className="size-4" />
+                <AlertCircle className="size-6 text-red-400" />
               ) : (
-                <Sparkles className="size-4 animate-pulse" />
+                <Sparkles className="size-6 text-amber-400 animate-pulse" />
               )}
             </div>
-
             <div>
-              <DialogTitle className="text-lg font-semibold tracking-tight text-white">
-                {isCompleted
-                  ? "Kit Ready"
-                  : isFailed
-                    ? "Generation Failed"
-                    : "Preparing Kit"}
+              <DialogTitle className="text-lg font-bold text-white tracking-tight">
+                {companyName}
               </DialogTitle>
               <DialogDescription className="text-xs text-white/50">
-                {getTargetTitle()}
+                {roleName}
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        {/* Status Message and Progress Bar */}
-        <div className="space-y-3.5 py-1">
-          <div className="flex items-center justify-between text-xs">
-            <span
-              className={`font-medium ${
-                isCompleted
-                  ? "text-emerald-400"
-                  : isFailed
-                    ? "text-red-400"
-                    : "text-white/80"
-              }`}
-            >
-              {getStatusText()}
-            </span>
-            <span className="text-white/50 tabular-nums font-semibold">
-              {progress}%
-            </span>
-          </div>
-
-          {/* Progress Bar */}
-          <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-500 ease-out ${
-                isCompleted
-                  ? "bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.5)]"
-                  : isFailed
-                    ? "bg-red-400"
-                    : "bg-white"
-              }`}
-              style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
-            />
-          </div>
-
-          {/* Polling sub-status indicator */}
-          {!isCompleted && !isFailed && (
-            <div className="flex items-center gap-2 pt-1 text-[11px] text-white/40">
-              <Loader2 className="size-3 animate-spin text-white/60" />
-              <span>Polling status in background...</span>
+        {/* Status Body */}
+        <div className="space-y-5 my-4">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-white/70 font-medium">Progress</span>
+              <span className="text-white font-semibold">{progress}%</span>
             </div>
-          )}
+
+            {/* Custom Smooth Progress Bar */}
+            <div className="h-2 w-full rounded-full bg-white/10 overflow-hidden relative">
+              <div
+                className={`h-full transition-all duration-700 ease-out rounded-full ${
+                  isFailed
+                    ? "bg-red-500"
+                    : isCompleted
+                      ? "bg-emerald-500"
+                      : "bg-white"
+                }`}
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Current Action / Description Pill */}
+          <div className="rounded-xl border border-white/10 bg-white/5 p-3.5 flex items-start gap-3">
+            {!isCompleted && !isFailed && (
+              <Loader2 className="size-4.5 text-white/70 animate-spin mt-0.5 shrink-0" />
+            )}
+            <p className="text-xs sm:text-sm text-white/80 leading-relaxed font-medium">
+              {getStatusText()}
+            </p>
+          </div>
         </div>
 
-        {/* Dialog Actions */}
-        <DialogFooter className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2 pt-3 border-t border-white/8">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            className="h-9.5 border-white/10 bg-transparent text-white/70 hover:bg-white/5 hover:text-white text-xs sm:text-sm cursor-pointer transition-all"
-          >
-            {isCompleted ? "Close" : "Continue in Background"}
-          </Button>
-
-          {isCompleted && (
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 mt-2">
+          {isCompleted ? (
             <Button
-              type="button"
-              onClick={handleOpenClick}
-              className="h-9.5 bg-white text-[#090b0b]! hover:bg-white/90 font-semibold px-4 text-xs sm:text-sm flex items-center gap-1.5 shadow-sm cursor-pointer transition-all"
+              onClick={handleAction}
+              className="w-full bg-white hover:bg-white/90 text-black font-semibold rounded-xl text-xs sm:text-sm h-10 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
-              <span>Open Kit</span>
-              <ArrowRight className="size-3.5" />
+              <span>Open Interview Kit</span>
+              <ArrowRight className="size-4" />
+            </Button>
+          ) : isFailed ? (
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="w-full border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs sm:text-sm h-10 cursor-pointer"
+            >
+              Close
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              className="w-full border-white/10 bg-white/5 hover:bg-white/10 text-white/80 hover:text-white rounded-xl text-xs sm:text-sm h-10 transition-colors cursor-pointer"
+            >
+              Continue in background
             </Button>
           )}
         </DialogFooter>

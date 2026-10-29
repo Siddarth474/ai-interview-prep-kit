@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useKitStore } from "@/hooks/use-kit-store";
+import type { KitRequirement, KitQuestion } from "@/services/kit.service";
 import KitLoading from "../loading";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { RegenerateQuestionsDialog } from "@/components/question/regenerate-questions-dialog";
@@ -128,6 +129,9 @@ export default function KitQuestionsPage() {
     }
   }, [id, fetchKit]);
 
+  const requirements = kit?.requirements;
+  const questions = kit?.questions;
+
   const toggleCategory = (val: string) => {
     setSelectedCategories((prev) =>
       prev.includes(val) ? prev.filter((c) => c !== val) : [...prev, val]
@@ -140,10 +144,12 @@ export default function KitQuestionsPage() {
 
   // All questions extracted from requirements or fallback to kit?.questions
   const allQuestions: QuestionItem[] = useMemo(() => {
-    if (Array.isArray(kit?.requirements) && kit.requirements.length > 0) {
-      const extracted = kit.requirements.flatMap((r: any) =>
-        (r.questions || []).map((q: any) => ({
+    if (Array.isArray(requirements) && requirements.length > 0) {
+      const extracted = requirements.flatMap((r: KitRequirement) =>
+        (r.questions || []).map((q: KitQuestion) => ({
           ...q,
+          category: q.category || "TECHNICAL",
+          difficulty: q.difficulty || "MEDIUM",
           requirementId: q.requirementId || r.id,
           requirement: q.requirement || {
             id: r.id,
@@ -156,30 +162,31 @@ export default function KitQuestionsPage() {
       if (extracted.length > 0) return extracted;
     }
 
-    return Array.isArray(kit?.questions) && kit.questions.length > 0
-      ? kit.questions
+    return Array.isArray(questions) && questions.length > 0
+      ? (questions as QuestionItem[])
       : [];
-  }, [kit?.requirements, kit?.questions]);
+  }, [requirements, questions]);
 
   // Build requirements list with attached questions
   const requirementCards: RequirementCardItem[] = useMemo(() => {
     // 1. If backend returned kit.requirements, use them
-    if (Array.isArray(kit?.requirements) && kit.requirements.length > 0) {
-      return kit.requirements.map((req: any) => {
+    if (Array.isArray(requirements) && requirements.length > 0) {
+      return requirements.map((req: KitRequirement) => {
         const questionsForReq =
           Array.isArray(req.questions) && req.questions.length > 0
-            ? req.questions
+            ? (req.questions as QuestionItem[])
             : allQuestions.filter(
                 (q) =>
                   q.requirementId === req.id ||
                   q.requirement?.id === req.id ||
-                  (q.requirement?.topic &&
-                    q.requirement.topic.toLowerCase() === req.topic.toLowerCase())
+                  (Boolean(q.requirement?.topic &&
+                    req.topic &&
+                    q.requirement.topic.toLowerCase() === req.topic.toLowerCase()))
               );
 
         return {
           id: req.id,
-          topic: req.topic,
+          topic: req.topic || "General Concepts",
           text: req.text,
           category: req.category || "TECHNICAL",
           importance: req.importance,
@@ -216,7 +223,7 @@ export default function KitQuestionsPage() {
 
     // 3. Fallback to empty list if kit has no requirements or questions yet
     return [];
-  }, [kit?.requirements, allQuestions]);
+  }, [requirements, allQuestions]);
 
   // Counts for each category option
   const categoryCounts = useMemo(() => {
@@ -557,7 +564,7 @@ export default function KitQuestionsPage() {
         open={isRegenerateOpen}
         onOpenChange={setIsRegenerateOpen}
         kitId={id}
-        requirements={kit?.requirements}
+        requirements={requirements}
         defaultCategory={
           selectedCategories.length === 1 ? selectedCategories[0] : "TECHNICAL"
         }

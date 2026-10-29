@@ -10,6 +10,7 @@ import { useKitStore } from "@/hooks/use-kit-store";
 import { FlashcardGrid } from "@/components/flashcard";
 import KitLoading from "../loading";
 import { cn } from "@/lib/utils";
+import type { Flashcard } from "@/services/flashcard.service";
 
 export default function KitFlashcardsPage() {
   const params = useParams();
@@ -37,12 +38,13 @@ export default function KitFlashcardsPage() {
     return <KitLoading />;
   }
 
-  const flashcards = Array.isArray(kit?.flashcards) ? kit.flashcards : [];
+  const flashcards: Flashcard[] = Array.isArray(kit?.flashcards)
+    ? (kit.flashcards as Flashcard[])
+    : [];
   const totalCards = flashcards.length;
-  const masteredCount = flashcards.filter((card: any) => {
-    const status = card?.progress?.status;
-    return typeof status === "string" && status.toUpperCase() === "MASTERED";
-  }).length;
+  const masteredCount = flashcards.filter(
+    (card: Flashcard) => card?.progress?.status === "MASTERED",
+  ).length;
   const progressPercentage =
     totalCards > 0 ? Math.round((masteredCount / totalCards) * 100) : 0;
 

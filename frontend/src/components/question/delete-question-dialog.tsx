@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useQuestion } from "@/hooks/use-question";
 import { useKitStore } from "@/hooks/use-kit-store";
+import type { KitData, KitRequirement, KitQuestion } from "@/services/kit.service";
 
 interface DeleteQuestionDialogProps {
   open: boolean;
@@ -43,24 +44,24 @@ export function DeleteQuestionDialog({
 
       // Optimistically update kit store by removing the deleted question
       if (kit) {
-        const updatePayload: any = {};
+        const updatePayload: Partial<KitData> = {};
         let totalCount = kit.questionsCount ? kit.questionsCount - 1 : 0;
 
         if (Array.isArray(kit.requirements)) {
-          updatePayload.requirements = kit.requirements.map((r: any) => {
+          updatePayload.requirements = kit.requirements.map((r: KitRequirement) => {
             const nextQuestions = Array.isArray(r.questions)
-              ? r.questions.filter((q: any) => q.id !== questionId)
+              ? r.questions.filter((q: KitQuestion) => q.id !== questionId)
               : r.questions;
             return { ...r, questions: nextQuestions };
           });
-          totalCount = updatePayload.requirements.reduce(
-            (acc: number, r: any) => acc + (r.questions?.length || 0),
+          totalCount = (updatePayload.requirements || []).reduce(
+            (acc: number, r: KitRequirement) => acc + (r.questions?.length || 0),
             0
           );
         }
 
         if (Array.isArray(kit.questions)) {
-          updatePayload.questions = kit.questions.filter((q: any) => q.id !== questionId);
+          updatePayload.questions = kit.questions.filter((q: KitQuestion) => q.id !== questionId);
         }
 
         updateKit({

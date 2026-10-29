@@ -1,8 +1,20 @@
 import { useState } from "react";
+import axios from "axios";
 import {
   questionService,
   type UpdateQuestionPayload,
 } from "@/services/question.service";
+
+function getErrorMessage(err: unknown, fallback: string): string {
+  if (axios.isAxiosError(err)) {
+    const data = err.response?.data as { message?: string } | undefined;
+    if (data?.message) return data.message;
+  }
+  if (err instanceof Error) {
+    return err.message;
+  }
+  return fallback;
+}
 
 export function useQuestion() {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,11 +33,8 @@ export function useQuestion() {
         throw new Error(res.message || "Failed to update question");
       }
       return res.data;
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to update question";
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Failed to update question");
       setError(message);
       throw new Error(message);
     } finally {
@@ -42,11 +51,8 @@ export function useQuestion() {
         throw new Error(res.message || "Failed to delete question");
       }
       return res.data;
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to delete question";
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Failed to delete question");
       setError(message);
       throw new Error(message);
     } finally {
@@ -63,11 +69,8 @@ export function useQuestion() {
         throw new Error(res.message || "Failed to regenerate questions");
       }
       return res.data;
-    } catch (err: any) {
-      const message =
-        err?.response?.data?.message ||
-        err?.message ||
-        "Failed to regenerate questions";
+    } catch (err: unknown) {
+      const message = getErrorMessage(err, "Failed to regenerate questions");
       setError(message);
       throw new Error(message);
     } finally {

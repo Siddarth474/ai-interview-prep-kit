@@ -85,7 +85,9 @@ export default function KitRequirementsPage() {
     : [];
 
   const requirements: RequirementItem[] =
-    rawRequirements.length > 0 ? rawRequirements : fallbackRequirements;
+    rawRequirements.length > 0
+      ? (rawRequirements as RequirementItem[])
+      : fallbackRequirements;
 
   return (
     <div className="flex flex-col gap-6 sm:gap-7 w-full text-white">
