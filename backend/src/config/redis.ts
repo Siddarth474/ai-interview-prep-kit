@@ -8,4 +8,4 @@ export const redis = new Redis(REDIS_URL, {
 
 export const QUEUE_NAMES = {
   GENERATE: "generate-interview-kit",
-} as const;
+} as const;  

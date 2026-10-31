@@ -12,7 +12,6 @@ export interface JwtPayload {
 }
 
 declare global {
-  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: JwtPayload | undefined;
@@ -32,7 +31,6 @@ export function authenticate(
         ? authHeader.split(" ")[1]
         : undefined;
 
-    // Try accessToken cookie first, then Authorization header, then legacy token cookie
     const token =
       req.cookies?.accessToken || tokenFromHeader;
 
