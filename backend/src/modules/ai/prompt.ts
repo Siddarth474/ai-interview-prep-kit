@@ -401,4 +401,45 @@ Guidelines:
 JOB DESCRIPTION:
 ${jd}
 `;
-}
+}
+
+export function buildCompanyBriefPrompt(
+  companyUrl: string,
+  sources: Array<{ url: string; title: string | null; content: string }>,
+  jobDescription?: string,
+): string {
+  const sourcesText =
+    sources.length > 0
+      ? sources
+          .map(
+            (s, idx) =>
+              `### Source ${idx + 1}: ${s.title ? s.title + " - " : ""}${s.url}\n${s.content.slice(0, 3500).trim()}`,
+          )
+          .join("\n\n---\n\n")
+      : "No crawled webpage content available. Rely on company URL and job description.";
+
+  const jdSection = jobDescription
+    ? `\n\nJOB DESCRIPTION (Provides context on role, team, and company description):\n${jobDescription.slice(0, 3000).trim()}`
+    : "";
+
+  return `You are an expert corporate researcher, technical recruiter, and interview intelligence analyst.
+Analyze the following crawled web sources and context for the company located at "${companyUrl}" to extract a high-signal Company Brief tailored for an interview candidate.
+
+EXTRACTION GOALS:
+1. companyName: The accurate, canonical company name.
+2. overview: A rich 2-4 paragraph overview covering what the company does, their primary mission, target market, scale/stage, and core value proposition.
+3. industry: Primary industry or sector (e.g., 'Fintech / Developer Tools', 'Enterprise SaaS', 'HealthTech').
+4. products: Structured details including a summary of their product catalog, a list of flagship products/services with descriptions and target users, and key technology/platform highlights.
+5. culture: Core cultural values, work environment philosophy (e.g., remote-friendly, fast iteration, high ownership), and engineering culture/practices.
+6. hiringInfo: Interview process insights (stages/rounds), what traits and skills they look for in candidates, and actionable candidate preparation tips.
+
+RULES & CONSTRAINTS:
+- Ground your information in the crawled sources and factual industry knowledge of this company.
+- Do not invent fictitious products, founders, or fake interview rounds.
+- If specific hiring steps are not explicitly stated in the sources, provide high-quality interview preparation guidance relevant to the company's domain and engineering culture.
+
+CRAWLED RESEARCH SOURCES:
+${sourcesText}
+${jdSection}
+`;
+}

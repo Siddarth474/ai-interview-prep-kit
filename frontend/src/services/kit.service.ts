@@ -51,6 +51,43 @@ export interface RoleBreakdown {
   updatedAt?: string | Date;
 }
 
+export interface CompanyProductItem {
+  name: string;
+  description: string;
+  targetUsers?: string;
+}
+
+export interface CompanyProducts {
+  summary?: string;
+  flagshipProducts?: CompanyProductItem[];
+  techHighlights?: string[];
+}
+
+export interface CompanyCulture {
+  coreValues?: string[];
+  workEnvironment?: string;
+  engineeringCulture?: string;
+}
+
+export interface CompanyHiringInfo {
+  interviewProcess?: string[];
+  whatTheyValue?: string[];
+  tipsForCandidates?: string[];
+}
+
+export interface CompanyBrief {
+  id?: string;
+  kitId?: string;
+  companyName: string;
+  overview: string;
+  industry?: string | null;
+  products?: CompanyProducts | null;
+  culture?: CompanyCulture | null;
+  hiringInfo?: CompanyHiringInfo | null;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+}
+
 export interface KitQuestion {
   id?: string;
   position?: number;
@@ -95,6 +132,7 @@ export interface KitData {
   progress?: number;
   requirements?: KitRequirement[];
   roleBreakdown?: RoleBreakdown | null;
+  companyBrief?: CompanyBrief | null;
   questions?: KitQuestion[];
   questionsCount?: number;
   flashcards?: Flashcard[];

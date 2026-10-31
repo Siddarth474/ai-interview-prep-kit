@@ -100,33 +100,33 @@ export function StudyPlanDayCard({
         </div>
 
         {/* Right Side: Action Button / Lock / Completed / Empty */}
-        <div className="flex items-center self-start sm:self-auto shrink-0 pt-2 sm:pt-0">
+        <div className="flex items-center w-full sm:w-auto shrink-0 pt-2 sm:pt-0">
           {isEmpty ? (
             <div className="text-xs text-white/20 font-mono pr-2">—</div>
           ) : isCompleted ? (
             <button
               type="button"
               onClick={() => onToggleComplete?.(item.dayNumber)}
-              className="h-10 px-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs sm:text-sm font-medium flex items-center gap-2 transition-all cursor-pointer group"
+              className="w-full sm:w-auto justify-center h-10 px-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 text-xs sm:text-sm font-medium flex items-center gap-2 transition-all cursor-pointer group"
               title="Day completed! Click to mark incomplete"
             >
               <CheckCircle2 className="size-4 group-hover:scale-110 transition-transform" />
               <span>Completed</span>
             </button>
           ) : isUnlocked ? (
-            <div className="flex items-center gap-2 self-start sm:self-auto">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 type="button"
                 onClick={() => onToggleComplete?.(item.dayNumber)}
-                className="h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 text-white/70 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-all cursor-pointer group"
+                className="flex-1 sm:flex-initial justify-center h-10 px-3.5 rounded-xl border border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-400 text-white/70 text-xs sm:text-sm font-medium flex items-center gap-1.5 transition-all cursor-pointer group"
                 title="Mark Day as Completed"
               >
                 <CheckCircle2 className="size-4 shrink-0 text-white/40 group-hover:text-emerald-400 transition-colors" />
-                <span className="hidden sm:inline">Mark Done</span>
+                <span>Mark Done</span>
               </button>
               <Link
                 href={targetUrl}
-                className="bg-white hover:bg-white/90 text-black font-semibold px-4 sm:px-5 py-2.5 rounded-xl text-sm h-10 shrink-0 shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 group self-start sm:self-auto"
+                className="flex-1 sm:flex-initial justify-center bg-white hover:bg-white/90 text-black font-semibold px-4 sm:px-5 py-2.5 rounded-xl text-sm h-10 shadow-sm transition-all cursor-pointer inline-flex items-center gap-1.5 group"
               >
                 <span>Start</span>
                 <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />

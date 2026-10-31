@@ -3,23 +3,23 @@
 import { useEffect } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft, RotateCw } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { KitStatsCards } from "@/components/overview/kit-stats-cards";
 import { KitRequirementsBreakdown } from "@/components/overview/kit-requirements-breakdown";
+import { KitCompanyBrief } from "@/components/overview/kit-company-brief";
 import KitLoading from "./loading";
 import { useKitStore } from "@/hooks/use-kit-store";
 
 export default function KitOverviewPage() {
   const params = useParams();
-  const id = (params?.id as string) || ""; 
+  const id = (params?.id as string) || "";
   const { kit, loading, fetchKit } = useKitStore();
-  
+
   useEffect(() => {
     if (id) fetchKit(id);
   }, [id, fetchKit]);
-  
+
   if (loading && !kit) return <KitLoading />;
 
   const subtitle =
@@ -46,27 +46,20 @@ export default function KitOverviewPage() {
               {kit?.roleBreakdown?.roleTitle || "Full Stack Developer"}
             </h1>
             <p className="text-xs sm:text-sm text-white/50 mt-1 max-w-2xl leading-relaxed">
-              {Array.isArray(kit?.roleBreakdown?.technologies) && kit.roleBreakdown.technologies.length > 0
+              {Array.isArray(kit?.roleBreakdown?.technologies) &&
+              kit.roleBreakdown.technologies.length > 0
                 ? kit.roleBreakdown.technologies.join(", ")
                 : subtitle}
             </p>
           </div>
         </div>
-
-        <Button
-          variant="outline"
-          className="h-10 px-4 border-white/10 bg-white/5 hover:bg-white/10 text-white text-xs sm:text-sm font-medium gap-2 shrink-0 transition-colors cursor-pointer"
-        >
-          <RotateCw className="size-3.5" />
-          <span>Regenerate Kit</span>
-        </Button>
       </div>
 
-      {/* 4 Stats Cards */}
       <KitStatsCards kit={kit} />
 
-      {/* Requirements Breakdown Card */}
       <KitRequirementsBreakdown kit={kit} />
+
+      <KitCompanyBrief kit={kit} />
     </div>
   );
 }

@@ -53,7 +53,6 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
     }
     setReviewedStatus(status);
 
-    // Optimistically update store so top progress bar updates immediately
     if (card.id) {
       const currentKit = useKitStore.getState().kit;
       if (currentKit && Array.isArray(currentKit.flashcards)) {
@@ -269,7 +268,6 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
             </p>
           </div>
 
-          {/* Bottom Bar on Back Face: Status indicator + Flip back prompt only (NO BUTTONS) */}
           <div className="relative flex items-center justify-between gap-2 pt-2 z-10">
             {reviewedStatus ? (
               <span

@@ -2,6 +2,7 @@ import { geminiProvider } from "../../lib/gemini-provider.js";
 import {
   buildRequirementPrompt,
   buildRoleBreakdownPrompt,
+  buildCompanyBriefPrompt,
   generateTechnicalQuestionsPrompt,
   generateBehavioralQuestionsPrompt,
   generateSystemDesignQuestionsPrompt,
@@ -15,6 +16,10 @@ import {
   type RoleBreakdownOutput,
 } from "../requirement/requirement.schema.js";
 import {
+  companyBriefOutputSchema,
+  type CompanyBriefOutput,
+} from "../research/company-brief.schema.js";
+import {
   technicalQuestionsOutputSchema,
   behavioralQuestionsOutputSchema,
   systemDesignQuestionsOutputSchema,
@@ -22,7 +27,10 @@ import {
   type QuestionsOutput,
 } from "../question/question.schema.js";
 import { prisma } from "../../lib/prisma.js";
-import { KitStatus, QuestionCategory } from "../../../generated/prisma/enums.js";
+import {
+  KitStatus,
+  QuestionCategory,
+} from "../../../generated/prisma/enums.js";
 import { calculateBudget } from "../../utils/questionCap.js";
 import { questionService } from "../question/question.service.js";
 import {
@@ -59,6 +67,19 @@ export const aiService = {
     const result = await geminiProvider.generateStructuredContent(
       buildRoleBreakdownPrompt(jobDescription),
       roleBreakdownOutputSchema,
+    );
+
+    return result;
+  },
+
+  async extractCompanyBrief(
+    companyUrl: string,
+    sources: Array<{ url: string; title: string | null; content: string }>,
+    jobDescription?: string,
+  ): Promise<CompanyBriefOutput> {
+    const result = await geminiProvider.generateStructuredContent(
+      buildCompanyBriefPrompt(companyUrl, sources, jobDescription),
+      companyBriefOutputSchema,
     );
 
     return result;

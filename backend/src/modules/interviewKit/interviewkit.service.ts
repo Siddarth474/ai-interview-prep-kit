@@ -37,6 +37,7 @@ export const interviewKitService = {
     const kit = await prisma.interviewKit.findUnique({
       where: { id: kitId },
       include: {
+        companyBrief: true,
         roleBreakdown: true,
         flashcards: { 
           orderBy: { position: "asc" },
