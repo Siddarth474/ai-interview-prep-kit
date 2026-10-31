@@ -13,13 +13,11 @@ export function useDashboardKits() {
   const [kits, setKits] = useState<KitData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Status dialog state for tracking newly created kit
   const [activeKitId, setActiveKitId] = useState<string | null>(null);
   const [activeKit, setActiveKit] = useState<KitData | null>(null);
   const [isStatusOpen, setIsStatusOpen] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
 
-  // Initial load on mount
   useEffect(() => {
     let isMounted = true;
 
@@ -68,7 +66,6 @@ export function useDashboardKits() {
     };
   }, []);
 
-  // Manual refetch for user retry action
   const fetchKits = useCallback(async () => {
     try {
       setIsLoading(true);

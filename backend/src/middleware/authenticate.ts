@@ -32,7 +32,6 @@ export function authenticate(
         ? authHeader.split(" ")[1]
         : undefined;
 
-    // Try accessToken cookie first, then Authorization header, then legacy token cookie
     const token =
       req.cookies?.accessToken || tokenFromHeader;
 
