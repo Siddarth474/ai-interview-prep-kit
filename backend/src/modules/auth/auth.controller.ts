@@ -3,25 +3,24 @@ import { signupSchema, loginSchema } from "./auth.schema.js";
 import { AuthService } from "./auth.service.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const ACCESS_COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  maxAge: 15 * 60 * 1000, // 15 minutes (matches access token expiration)
+  secure: isProduction,
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  maxAge: 15 * 60 * 1000,
   path: "/",
 };
 
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-  sameSite: "lax" as const,
-  maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days (matches refresh token expiration)
+  secure: isProduction,
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
+  maxAge: 7 * 24 * 60 * 60 * 1000,
   path: "/",
 };
 
-/**
- * Helper to set both token cookies on the response
- */
 function setTokenCookies(
   res: Response,
   accessToken: string,
@@ -31,14 +30,11 @@ function setTokenCookies(
   res.cookie("refreshToken", refreshToken, REFRESH_COOKIE_OPTIONS);
 }
 
-/**
- * Helper to clear both token cookies
- */
 function clearTokenCookies(res: Response) {
   const clearOptions = {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax" as const,
+    secure: isProduction,
+    sameSite: isProduction ? ("none" as const) : ("lax" as const),
     path: "/",
   };
   res.clearCookie("accessToken", clearOptions);
@@ -46,10 +42,6 @@ function clearTokenCookies(res: Response) {
 }
 
 export const AuthHandler = {
-  /**
-   * Handle user registration
-   * POST /auth/signup
-   */
   async signupHandler(req: Request, res: Response, next: NextFunction) {
     try {
       const parseResult = signupSchema.safeParse(req.body);
@@ -72,10 +64,6 @@ export const AuthHandler = {
     }
   },
 
-  /**
-   * Handle user authentication
-   * POST /auth/login
-   */
   async loginHandler(req: Request, res: Response, next: NextFunction) {
     try {
       const parseResult = loginSchema.safeParse(req.body);
@@ -98,14 +86,9 @@ export const AuthHandler = {
     }
   },
 
-  /**
-   * Handle user logout — revokes the refresh token
-   * POST /auth/logout
-   */
   async logoutHandler(req: Request, res: Response, next: NextFunction) {
     try {
-      const refreshToken =
-        req.cookies?.refreshToken || req.body?.refreshToken;
+      const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
       if (refreshToken) {
         await AuthService.logoutUser(refreshToken);
@@ -116,21 +99,20 @@ export const AuthHandler = {
       return res
         .status(200)
         .json(
-          new ApiResponse(200, { message: "Logged out successfully" }, "Logged out successfully"),
+          new ApiResponse(
+            200,
+            { message: "Logged out successfully" },
+            "Logged out successfully",
+          ),
         );
     } catch (error) {
       next(error);
     }
   },
 
-  /**
-   * Refresh access token using a valid refresh token
-   * POST /auth/refresh
-   */
   async refreshHandler(req: Request, res: Response, next: NextFunction) {
     try {
-      const refreshToken =
-        req.cookies?.refreshToken || req.body?.refreshToken;
+      const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
 
       if (!refreshToken) {
         return res
@@ -147,21 +129,19 @@ export const AuthHandler = {
         .json(
           new ApiResponse(
             200,
-            { accessToken: tokens.accessToken, refreshToken: tokens.refreshToken },
+            {
+              accessToken: tokens.accessToken,
+              refreshToken: tokens.refreshToken,
+            },
             "Token refreshed successfully",
           ),
         );
     } catch (error) {
-      // On any refresh failure, clear cookies so client knows to re-login
       clearTokenCookies(res);
       next(error);
     }
   },
 
-  /**
-   * Get current authenticated user profile
-   * GET /auth/me
-   */
   async getMeHandler(req: Request, res: Response, next: NextFunction) {
     try {
       const userId = req.user?.userId;
