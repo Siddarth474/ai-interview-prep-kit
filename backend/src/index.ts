@@ -11,6 +11,7 @@ import { errorHandler } from "./middleware/errorHandler.js";
 import "./worker/worker.js";
 
 const app = express();
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5001;
 
 app.use(
