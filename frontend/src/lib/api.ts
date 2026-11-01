@@ -7,7 +7,6 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-// Attach Authorization header if token cookie exists
 api.interceptors.request.use((config) => {
   if (typeof document !== "undefined") {
     const match =
