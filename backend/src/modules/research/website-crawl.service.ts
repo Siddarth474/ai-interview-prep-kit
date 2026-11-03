@@ -39,8 +39,7 @@ function normalizeUrl(rawUrl: string): string | null {
 function isSameDomain(startUrl: URL, targetUrl: string): boolean {
   try {
     const target = new URL(targetUrl);
-    
-    // Normalize both hostnames by removing 'www.' if present
+   
     const startHost = startUrl.hostname.replace(/^www\./, "");
     const targetHost = target.hostname.replace(/^www\./, "");
 
@@ -57,6 +56,7 @@ export const WebsiteCrawlerService = {
   async crawl(startUrl: string) {
     const browser = await chromium.launch({
       headless: true,
+      channel: "chromium"
     });
 
     try {

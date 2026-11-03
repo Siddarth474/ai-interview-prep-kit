@@ -24,7 +24,7 @@ export const requirementService = {
         topic: requirement.topic,
         category: requirement.category,
         importance: requirement.importance,
-        position: index,
+        position: index + 1,
       })),
     });
     //console.log("Requirements extracted successfully: ", requirements);

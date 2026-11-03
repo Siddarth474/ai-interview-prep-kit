@@ -7,16 +7,16 @@ export const api = axios.create({
   withCredentials: true,
 });
 
-api.interceptors.request.use((config) => {
-  if (typeof document !== "undefined") {
-    const match =
-      document.cookie.match(new RegExp("(^| )accessToken=([^;]+)"));
-    if (match) {
-      config.headers.Authorization = `Bearer ${match[2]}`;
-    }
-  }
-  return config;
-});
+// api.interceptors.request.use((config) => {
+//   if (typeof document !== "undefined") {
+//     const match =
+//       document.cookie.match(new RegExp("(^| )accessToken=([^;]+)"));
+//     if (match) {
+//       config.headers.Authorization = `Bearer ${match[2]}`;
+//     }
+//   }
+//   return config;
+// });
 
 let isRefreshing = false;
 let failedQueue: Array<{
@@ -35,21 +35,33 @@ const processQueue = (error: unknown = null) => {
   failedQueue = [];
 };
 
-function redirectToLogin() {
-  if (typeof window !== "undefined") {
-    try {
-      localStorage.removeItem("user");
-    } catch {}
+let isRedirecting = false;
 
-    document.cookie = "accessToken=; path=/; max-age=0";
-    document.cookie = "refreshToken=; path=/; max-age=0";
+async function redirectToLogin() {
+  if (typeof window === "undefined" || isRedirecting) return;
+  isRedirecting = true;
 
-    if (
-      !window.location.pathname.startsWith("/login") &&
-      !window.location.pathname.startsWith("/signup")
-    ) {
-      window.location.replace("/login");
-    }
+  try {
+    localStorage.removeItem("user");
+  } catch {}
+
+  try {
+    // Request server to clear HttpOnly auth cookies via Set-Cookie headers
+    await Promise.race([
+      authService.logout(),
+      new Promise((resolve) => setTimeout(resolve, 3000)),
+    ]);
+  } catch (error) {
+    console.error("Logout request failed during redirect:", error);
+  }
+
+  if (
+    !window.location.pathname.startsWith("/login") &&
+    !window.location.pathname.startsWith("/signup")
+  ) {
+    window.location.replace("/login");
+  } else {
+    isRedirecting = false;
   }
 }
 
@@ -68,12 +80,14 @@ api.interceptors.response.use(
     const isAuthEndpoint =
       url.includes("/auth/login") ||
       url.includes("/auth/signup") ||
-      url.includes("/auth/refresh");
+      url.includes("/auth/refresh") ||
+      url.includes("/auth/logout") ||
+      url.includes("/auth/me");
 
     // 1. If 401 from /auth/refresh or auth endpoints, do not attempt to refresh again
     if (error.response?.status === 401 && isAuthEndpoint) {
       if (url.includes("/auth/refresh")) {
-        redirectToLogin();
+        await redirectToLogin();
       }
       return Promise.reject(error);
     }
@@ -98,7 +112,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
-        redirectToLogin();
+        await redirectToLogin();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;

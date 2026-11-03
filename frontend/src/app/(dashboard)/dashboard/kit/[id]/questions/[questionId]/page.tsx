@@ -42,6 +42,7 @@ interface QuestionItem {
   difficulty: "EASY" | "MEDIUM" | "HARD" | string;
   guidance?: string;
   requirementId?: string | null;
+  isEdited?: boolean;
   requirement?: {
     id?: string;
     topic?: string;
@@ -78,6 +79,7 @@ export default function QuestionDetailPage() {
         category: q.category || "TECHNICAL",
         difficulty: q.difficulty || "MEDIUM",
         requirementId: q.requirementId || r.id,
+        isEdited: Boolean(q.isEdited),
         requirement: q.requirement || {
           id: r.id,
           topic: r.topic,
@@ -350,6 +352,17 @@ export default function QuestionDetailPage() {
           >
             {difficulty}
           </Badge>
+
+          {currentQuestion.isEdited && (
+            <Badge
+              variant="outline"
+              className="h-7 px-2.5 rounded-lg sm:rounded-xl border border-blue-500/30 bg-blue-500/10 text-blue-300 text-[11px] sm:text-xs font-semibold tracking-wide flex items-center gap-1.5"
+              title="This question was customized by you and is protected during AI regeneration"
+            >
+              <Pencil className="size-3 text-blue-400" />
+              <span>Edited</span>
+            </Badge>
+          )}
         </div>
 
         {/* Right: Actions */}
