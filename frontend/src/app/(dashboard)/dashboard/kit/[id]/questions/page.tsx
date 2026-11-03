@@ -9,7 +9,6 @@ import {
   Code2,
   Users,
   Briefcase,
-  Building2,
   Cpu,
   ArrowRight,
   HelpCircle,
@@ -47,7 +46,7 @@ interface QuestionItem {
   id?: string;
   position?: number;
   question: string;
-  category: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | "COMPANY" | "SYSTEM_DESIGN" | string;
+  category: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | "SYSTEM_DESIGN" | string;
   difficulty: "EASY" | "MEDIUM" | "HARD" | string;
   guidance?: string;
   requirementId?: string | null;
@@ -85,11 +84,6 @@ export const CATEGORY_OPTIONS = [
     icon: Briefcase,
   },
   {
-    value: "COMPANY",
-    label: "Company-wise",
-    icon: Building2,
-  },
-  {
     value: "SYSTEM_DESIGN",
     label: "System Design",
     icon: Cpu,
@@ -99,7 +93,6 @@ export const CATEGORY_OPTIONS = [
 export function normalizeCategory(category?: string): string {
   const upper = (category || "").toUpperCase().trim();
   if (upper.includes("SYSTEM") || upper.includes("DESIGN")) return "SYSTEM_DESIGN";
-  if (upper.includes("COMPANY")) return "COMPANY";
   if (upper.includes("ROLE")) return "ROLE_SPECIFIC";
   if (upper.includes("BEHAVIOR")) return "BEHAVIORAL";
   return "TECHNICAL";
@@ -109,7 +102,6 @@ function getTopicIcon(category?: string) {
   const norm = normalizeCategory(category);
   if (norm === "BEHAVIORAL") return Users;
   if (norm === "ROLE_SPECIFIC") return Briefcase;
-  if (norm === "COMPANY") return Building2;
   if (norm === "SYSTEM_DESIGN") return Cpu;
   return Code2;
 }
@@ -231,7 +223,6 @@ export default function KitQuestionsPage() {
       TECHNICAL: 0,
       BEHAVIORAL: 0,
       ROLE_SPECIFIC: 0,
-      COMPANY: 0,
       SYSTEM_DESIGN: 0,
     };
 
