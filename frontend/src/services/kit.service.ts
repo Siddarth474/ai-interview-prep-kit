@@ -94,7 +94,7 @@ export interface KitQuestion {
   question: string;
   answer?: string;
   guidance?: string;
-  category?: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | "COMPANY" | "SYSTEM_DESIGN" | string;
+  category?: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | "SYSTEM_DESIGN" | string;
   difficulty?: "EASY" | "MEDIUM" | "HARD" | string;
   requirementId?: string | null;
   isEdited?: boolean;

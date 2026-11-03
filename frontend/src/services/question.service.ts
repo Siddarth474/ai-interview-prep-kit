@@ -9,7 +9,12 @@ export interface QuestionData {
   answer?: string;
   guidance?: string;
   difficulty?: "EASY" | "MEDIUM" | "HARD" | string;
-  category?: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | "COMPANY" | "SYSTEM_DESIGN" | string;
+  category?:
+    | "TECHNICAL"
+    | "BEHAVIORAL"
+    | "ROLE_SPECIFIC"
+    | "SYSTEM_DESIGN"
+    | string;
   position?: number;
   isEdited?: boolean;
   createdAt?: string | Date;
@@ -22,7 +27,7 @@ export interface UpdateQuestionPayload {
   answer?: string;
   guidance?: string;
   difficulty?: "EASY" | "MEDIUM" | "HARD";
-  category?: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC";
+  category?: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | "SYSTEM_DESIGN";
 }
 
 export interface DeleteQuestionResponse {
@@ -34,31 +39,31 @@ export const questionService = {
   async updateQuestion(
     kitId: string,
     questionId: string,
-    payload: UpdateQuestionPayload
+    payload: UpdateQuestionPayload,
   ): Promise<ApiResponse<QuestionData>> {
     const response = await api.patch<ApiResponse<QuestionData>>(
       `/kits/${kitId}/questions/${questionId}`,
-      payload
+      payload,
     );
     return response.data;
   },
 
   async deleteQuestion(
     kitId: string,
-    questionId: string
+    questionId: string,
   ): Promise<ApiResponse<DeleteQuestionResponse>> {
     const response = await api.delete<ApiResponse<DeleteQuestionResponse>>(
-      `/kits/${kitId}/questions/${questionId}`
+      `/kits/${kitId}/questions/${questionId}`,
     );
     return response.data;
   },
 
   async regenerateQuestions(
     kitId: string,
-    category: string
+    category: string,
   ): Promise<ApiResponse<QuestionData[]>> {
     const response = await api.post<ApiResponse<QuestionData[]>>(
-      `/kits/${kitId}/questions/regenerate/${category}`
+      `/kits/${kitId}/questions/regenerate/${category}`,
     );
     return response.data;
   },

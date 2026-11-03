@@ -12,8 +12,6 @@ const requirementItemSchema = z.object({
       QuestionCategory.TECHNICAL,
       QuestionCategory.BEHAVIORAL,
       QuestionCategory.ROLE_SPECIFIC,
-      QuestionCategory.COMPANY,
-      QuestionCategory.PROJECT,
       QuestionCategory.SYSTEM_DESIGN,
     ])
     .describe("The category of the requirement"),
