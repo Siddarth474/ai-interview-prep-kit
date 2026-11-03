@@ -85,7 +85,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { isMobile } = useSidebar();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
 
-  // Agar URL /dashboard/[id] hai toh params.id mil jayega
   const kitId = params?.id as string | undefined;
   const isKitView = Boolean(kitId);
   const activeNavItems =
@@ -106,10 +105,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       try {
         localStorage.removeItem("user");
       } catch {}
-      if (typeof document !== "undefined") {
-        document.cookie =
-          "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; max-age=0";
-      }
       router.replace("/login");
     }
   };

@@ -15,11 +15,11 @@ app.set("trust proxy", 1);
 const PORT = process.env.PORT || 5001;
 
 app.use(
-  cors({
+  cors({ 
     origin: process.env.FRONTEND_URL!,
     methods: ["GET", "POST", "PATCH", "DELETE"],
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"]
+    allowedHeaders: ["Content-Type", "Authorization"] 
   }),
 );
 app.use(express.json());

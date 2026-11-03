@@ -18,10 +18,8 @@ export const flashcardService = {
     const flashcards = await aiService.generateFlashcardsForKit(
       questions as { question: string; guidance: string }[],
     );
-    console.log("Flashcards: ", flashcards);
 
     await prisma.$transaction(async (tx) => {
-      // Remove any existing flashcards for this kit if retrying
       await tx.flashcard.deleteMany({
         where: { kitId },
       });
@@ -51,7 +49,6 @@ export const flashcardService = {
   ) {
     await verifyKitOwnership(kitId, userId);
 
-    // Get the next position by finding the max position in this kit
     const lastCard = await prisma.flashcard.findFirst({
       where: { kitId },
       orderBy: { position: "desc" },
@@ -60,7 +57,6 @@ export const flashcardService = {
 
     const nextPosition = (lastCard?.position ?? -1) + 1;
 
-    // If sourceQuestionId is provided, verify it belongs to this kit
     if (data.sourceQuestionId) {
       const question = await prisma.question.findUnique({
         where: { id: data.sourceQuestionId },
@@ -119,7 +115,6 @@ export const flashcardService = {
       );
     }
 
-    // If sourceQuestionId is provided and not null, verify it belongs to this kit
     if (data.sourceQuestionId) {
       const question = await prisma.question.findUnique({
         where: { id: data.sourceQuestionId },
@@ -213,7 +208,6 @@ export const flashcardService = {
     const currentReviewCount = existing.progress?.reviewCount ?? 0;
     const nextReviewCount = currentReviewCount + 1;
 
-    // Only mark MASTERED if reviewed at least 2 times, otherwise keep IN_PROGRESS until a second confirmation
     const targetStatus: FlashcardStatus =
       status === FlashcardStatus.MASTERED && nextReviewCount >= 2
         ? FlashcardStatus.MASTERED

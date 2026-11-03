@@ -16,6 +16,14 @@ const nextConfig: NextConfig = {
   experimental: {
     agentUpgrade: "security",
   },
+  // async rewrites() {
+  //   return [
+  //     {
+  //       source: "/api/:path*",
+  //       destination: "https://ai-interview-prep-kit-18h4.onrender.com/api/:path*",
+  //     },
+  //   ];
+  // },
 };
 
 export default nextConfig;

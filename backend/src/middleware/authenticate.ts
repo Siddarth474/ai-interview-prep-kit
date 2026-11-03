@@ -2,8 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { ApiError } from "../utils/ApiError.js";
 
-const JWT_SECRET =
-  process.env.ACCESS_TOKEN as string;
+const JWT_SECRET = process.env.ACCESS_TOKEN as string;
 
 export interface JwtPayload {
   userId: string;
@@ -32,8 +31,7 @@ export function authenticate(
         ? authHeader.split(" ")[1]
         : undefined;
 
-    const token =
-      req.cookies?.accessToken || tokenFromHeader;
+    const token = req.cookies?.accessToken || tokenFromHeader;
 
     if (!token) {
       throw new ApiError("Authentication required", 401, "NO_TOKEN");

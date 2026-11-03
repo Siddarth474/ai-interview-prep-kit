@@ -30,8 +30,10 @@ export interface QuestionData {
   question: string;
   category: "TECHNICAL" | "BEHAVIORAL" | "ROLE_SPECIFIC" | string;
   difficulty: "EASY" | "MEDIUM" | "HARD" | string;
+  answer?: string;
   guidance?: string | null;
   requirementId?: string | null;
+  isEdited?: boolean;
   requirement?: {
     id?: string;
     topic?: string;
@@ -93,12 +95,12 @@ export function UpdateQuestionDialog({
 
   const [formData, setFormData] = useState<{
     question: string;
-    guidance: string;
+    answer: string;
     category: CategoryType;
     difficulty: DifficultyType;
   }>(() => ({
     question: question?.question || "",
-    guidance: question?.guidance || "",
+    answer: question?.answer || "",
     category: parseCategory(question?.category),
     difficulty: parseDifficulty(question?.difficulty),
   }));
@@ -112,7 +114,7 @@ export function UpdateQuestionDialog({
     if (open && question) {
       setFormData({
         question: question.question || "",
-        guidance: question.guidance || "",
+        answer: question.answer || "",
         category: parseCategory(question.category),
         difficulty: parseDifficulty(question.difficulty),
       });
@@ -137,7 +139,7 @@ export function UpdateQuestionDialog({
     try {
       const updated = await updateQuestion(kitId, questionId, {
         question: formData.question.trim(),
-        guidance: formData.guidance.trim() || undefined,
+        answer: formData.answer.trim() || undefined,
         category: formData.category,
         difficulty: formData.difficulty,
       });
@@ -151,7 +153,9 @@ export function UpdateQuestionDialog({
             ...r,
             questions: Array.isArray(r.questions)
               ? r.questions.map((q: KitQuestion) =>
-                  q.id === questionId ? { ...q, ...updated, ...formData } : q
+                  q.id === questionId
+                    ? { ...q, ...updated, ...formData, isEdited: true }
+                    : q
                 )
               : r.questions,
           }));
@@ -159,24 +163,24 @@ export function UpdateQuestionDialog({
 
         if (Array.isArray(kit.questions)) {
           updatePayload.questions = kit.questions.map((q: KitQuestion) =>
-            q.id === questionId ? { ...q, ...updated, ...formData } : q
+            q.id === questionId
+              ? { ...q, ...updated, ...formData, isEdited: true }
+              : q
           );
         }
 
         updateKit(updatePayload);
       }
 
-      onSuccess?.({ ...question, ...updated, ...formData });
+      onSuccess?.({ ...question, ...updated, ...formData, isEdited: true });
       onOpenChange(false);
-    } catch {
-      // Error is already captured by useQuestion
-    }
+    } catch {}
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed top-1/2 left-1/2 z-50 grid w-full max-w-lg -translate-x-1/2 -translate-y-1/2 gap-5 rounded-2xl bg-[#0e1111] border border-white/10 p-6 text-white shadow-2xl backdrop-blur-xl">
-        <DialogHeader className="space-y-1.5 text-left">
+      <DialogContent className="w-full max-w-lg max-h-[85vh] sm:max-h-[88vh] min-h-95 p-0 flex flex-col rounded-2xl bg-[#0e1111] border border-white/10 text-white shadow-2xl backdrop-blur-xl overflow-hidden">
+        <DialogHeader className="p-5 sm:p-6 pb-4 border-b border-white/10 shrink-0 space-y-1.5 text-left">
           <div className="flex items-center gap-2">
             <div className="flex size-7 items-center justify-center rounded-lg bg-white/10 text-white">
               <Pencil className="size-3.5" />
@@ -190,119 +194,121 @@ export function UpdateQuestionDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 pt-1">
-          {error && (
-            <div
-              role="alert"
-              className="rounded-lg border border-red-500/25 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-400 animate-in fade-in duration-200"
-            >
-              {error}
-            </div>
-          )}
-
-          {/* Question Text */}
-          <div className="space-y-2">
-            <Label htmlFor="question-text" className="text-xs font-medium text-white/80">
-              Question Text <span className="text-red-400">*</span>
-            </Label>
-            <Textarea
-              id="question-text"
-              value={formData.question}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, question: e.target.value }))
-              }
-              placeholder="e.g. How do you handle idempotency in RESTful APIs?"
-              disabled={isLoading}
-              rows={3}
-              required
-              className="resize-none bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm leading-relaxed"
-            />
-          </div>
-
-          {/* Category & Difficulty Selects */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {/* Category Select */}
-            <div className="space-y-2">
-              <Label htmlFor="category-select" className="text-xs font-medium text-white/80">
-                Category
-              </Label>
-              <Select
-                value={formData.category}
-                onValueChange={(val) => {
-                  if (val) setFormData((prev) => ({ ...prev, category: val as CategoryType }));
-                }}
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4">
+            {error && (
+              <div
+                role="alert"
+                className="rounded-lg border border-red-500/25 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-400 animate-in fade-in duration-200"
               >
-                <SelectTrigger
-                  id="category-select"
-                  className="w-full h-10 bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm cursor-pointer"
-                >
-                  <SelectValue placeholder="Select category" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#121616] border border-white/10 text-white shadow-2xl p-1 z-50">
-                  {CATEGORIES.map((cat) => (
-                    <SelectItem
-                      key={cat.value}
-                      value={cat.value}
-                      className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer rounded-lg text-sm py-2 px-2.5"
-                    >
-                      {cat.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+                {error}
+              </div>
+            )}
 
-            {/* Difficulty Select */}
+            {/* Question Text */}
             <div className="space-y-2">
-              <Label htmlFor="difficulty-select" className="text-xs font-medium text-white/80">
-                Difficulty
+              <Label htmlFor="question-text" className="text-xs font-medium text-white/80">
+                Question Text <span className="text-red-400">*</span>
               </Label>
-              <Select
-                value={formData.difficulty}
-                onValueChange={(val) => {
-                  if (val) setFormData((prev) => ({ ...prev, difficulty: val as DifficultyType }));
-                }}
-              >
-                <SelectTrigger
-                  id="difficulty-select"
-                  className="w-full h-10 bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm cursor-pointer"
+              <Textarea
+                id="question-text"
+                value={formData.question}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, question: e.target.value }))
+                }
+                placeholder="e.g. How do you handle idempotency in RESTful APIs?"
+                disabled={isLoading}
+                rows={3}
+                required
+                className="resize-none bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm leading-relaxed"
+              />
+            </div>
+
+            {/* Category & Difficulty Selects */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Category Select */}
+              <div className="space-y-2">
+                <Label htmlFor="category-select" className="text-xs font-medium text-white/80">
+                  Category
+                </Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(val) => {
+                    if (val) setFormData((prev) => ({ ...prev, category: val as CategoryType }));
+                  }}
                 >
-                  <SelectValue placeholder="Select difficulty" />
-                </SelectTrigger>
-                <SelectContent className="bg-[#121616] border border-white/10 text-white shadow-2xl p-1 z-50">
-                  {DIFFICULTIES.map((diff) => (
-                    <SelectItem
-                      key={diff.value}
-                      value={diff.value}
-                      className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer rounded-lg text-sm py-2 px-2.5 flex items-center gap-2"
-                    >
-                      <span>{diff.label}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <SelectTrigger
+                    id="category-select"
+                    className="w-full h-10 bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm cursor-pointer"
+                  >
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#121616] border border-white/10 text-white shadow-2xl p-1 z-50">
+                    {CATEGORIES.map((cat) => (
+                      <SelectItem
+                        key={cat.value}
+                        value={cat.value}
+                        className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer rounded-lg text-sm py-2 px-2.5"
+                      >
+                        {cat.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Difficulty Select */}
+              <div className="space-y-2">
+                <Label htmlFor="difficulty-select" className="text-xs font-medium text-white/80">
+                  Difficulty
+                </Label>
+                <Select
+                  value={formData.difficulty}
+                  onValueChange={(val) => {
+                    if (val) setFormData((prev) => ({ ...prev, difficulty: val as DifficultyType }));
+                  }}
+                >
+                  <SelectTrigger
+                    id="difficulty-select"
+                    className="w-full h-10 bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm cursor-pointer"
+                  >
+                    <SelectValue placeholder="Select difficulty" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#121616] border border-white/10 text-white shadow-2xl p-1 z-50">
+                    {DIFFICULTIES.map((diff) => (
+                      <SelectItem
+                        key={diff.value}
+                        value={diff.value}
+                        className="text-white hover:bg-white/10 focus:bg-white/10 focus:text-white cursor-pointer rounded-lg text-sm py-2 px-2.5 flex items-center gap-2"
+                      >
+                        <span>{diff.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Guidance / Key Criteria */}
+            <div className="space-y-2">
+              <Label htmlFor="guidance-text" className="text-xs font-medium text-white/80">
+                Answer
+              </Label>
+              <Textarea
+                id="guidance-text"
+                value={formData.answer}
+                onChange={(e) =>
+                  setFormData((prev) => ({ ...prev, answer: e.target.value }))
+                }
+                placeholder="Key criteria, points to look for in candidate's response..."
+                disabled={isLoading}
+                rows={4}
+                className="resize-none bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm leading-relaxed"
+              />
             </div>
           </div>
 
-          {/* Guidance / Key Criteria */}
-          <div className="space-y-2">
-            <Label htmlFor="guidance-text" className="text-xs font-medium text-white/80">
-              Additional Guidance
-            </Label>
-            <Textarea
-              id="guidance-text"
-              value={formData.guidance}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, guidance: e.target.value }))
-              }
-              placeholder="Key criteria, points to look for in candidate's response..."
-              disabled={isLoading}
-              rows={4}
-              className="resize-none bg-white/4 border-white/10 text-white placeholder:text-white/30 focus-visible:border-white/30 focus-visible:ring-1 focus-visible:ring-white/20 transition-all text-sm leading-relaxed"
-            />
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0 pt-2">
+          <DialogFooter className="p-4 sm:p-6 pt-3 border-t border-white/10 bg-[#0e1111] shrink-0">
             <Button
               type="button"
               variant="outline"
