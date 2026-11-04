@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { useQuestion } from "@/hooks/use-question";
 import { useKitStore } from "@/hooks/use-kit-store";
 import type { KitData, KitRequirement, KitQuestion } from "@/services/kit.service";
+import { notify } from "@/lib/notification";
 
 interface DeleteQuestionDialogProps {
   open: boolean;
@@ -35,7 +36,9 @@ export function DeleteQuestionDialog({
 
   const handleConfirmDelete = async () => {
     if (!questionId) {
-      setError("Question ID is missing");
+      const msg = "Question ID is missing";
+      setError(msg);
+      notify.error(msg);
       return;
     }
 
@@ -70,10 +73,12 @@ export function DeleteQuestionDialog({
         });
       }
 
+      notify.success("Question deleted successfully");
       onOpenChange(false);
       onSuccess?.();
-    } catch {
-      // Error is handled by useQuestion
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to delete question";
+      notify.error(msg);
     }
   };
 

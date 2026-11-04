@@ -22,9 +22,13 @@ export const interviewKitService = {
     if (!kit)
       throw new ApiError("Failed to create kit", 500, "KIT_CREATION_FAILED");
 
-    await researchQueue.add("research-crawl", {
-      kitId: kit.id,
-    });
+    await researchQueue.add(
+      "research-crawl",
+      {
+        kitId: kit.id,
+      },
+      { jobId: `generate-kit-${kit.id}` },
+    );
 
     return kit;
   },
@@ -39,7 +43,7 @@ export const interviewKitService = {
       include: {
         companyBrief: true,
         roleBreakdown: true,
-        flashcards: { 
+        flashcards: {
           orderBy: { position: "asc" },
           include: {
             progress: true,
@@ -255,11 +259,15 @@ export const interviewKitService = {
     return { deleted: true };
   },
 
-  async updateKitStatus(kitId: string, status: KitStatus, tx?: Prisma.TransactionClient) {
+  async updateKitStatus(
+    kitId: string,
+    status: KitStatus,
+    tx?: Prisma.TransactionClient,
+  ) {
     const client = tx ?? prisma;
     return await client.interviewKit.update({
       where: { id: kitId },
       data: { status },
     });
-  }
+  },
 };

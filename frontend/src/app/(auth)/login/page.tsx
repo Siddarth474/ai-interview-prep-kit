@@ -25,7 +25,6 @@ export default function LoginPage() {
     showPassword,
     setShowPassword,
     isLoading,
-    error,
     handleSubmit,
   } = useLogin();
 
@@ -42,15 +41,6 @@ export default function LoginPage() {
 
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4 pt-2">
-          {error && (
-            <div
-              role="alert"
-              className="rounded-lg border border-red-500/25 bg-red-500/10 px-3.5 py-2.5 text-xs text-red-400 animate-in fade-in duration-200"
-            >
-              {error}
-            </div>
-          )}
-
           <div className="space-y-2">
             <Label
               htmlFor="identifier"

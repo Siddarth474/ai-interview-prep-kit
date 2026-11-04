@@ -25,22 +25,57 @@ ${jd}
 `;
 }
 
+/**
+ * Helper to format the company research context section if present.
+ */
+function buildCompanyContextSection(companyContext?: string): string {
+  if (!companyContext) return "";
+  return `
+Company Research Context:
+Use this context only when it is relevant to the requirement.
+---
+${companyContext}
+---
+`;
+}
+
+/**
+ * Common interview question generation rules shared across all categories:
+ * Technical, Behavioral, System Design, and Role-Specific.
+ */
+const COMMON_QUESTION_RULES = `
+Rules:
+
+1. Requirement relevance
+- The job requirement is the PRIMARY driver for question generation.
+- Every question must directly assess knowledge, skills, behaviors, or architectural ability relevant to the requirement.
+- Across the questions, cover different important aspects of the requirement.
+- Do not repeatedly test the same concept using different wording.
+- Do not introduce unrelated technologies, concepts, or assumptions.
+
+2. Company context
+- Company research is SECONDARY context used to make questions more relevant to the company.
+- Use company context (culture, domain, architecture, tools, workflows) only when it naturally fits the requirement.
+- Do not force company-specific context into every question.
+- If company context is not relevant, generate the question from the requirement alone.
+- Do NOT invent company-specific facts that are not present in the provided context.
+
+3. Difficulty distribution
+- Distribute difficulty based on the number of questions:
+  - count = 1: MEDIUM
+  - count = 2: 1 EASY, 1 MEDIUM
+  - count = 3: 1 EASY, 1 MEDIUM, 1 HARD
+  - count >= 4: include EASY, MEDIUM, and HARD, with most questions being MEDIUM.
+- Difficulty should also be appropriate for the actual requirement.
+- Do not make a question artificially difficult just to satisfy the difficulty distribution.
+`;
+
 export function generateTechnicalQuestionsPrompt(
   topic: string,
   requirement: string,
   count: number,
   companyContext?: string,
 ) {
-  const contextSection = companyContext
-    ? `
-Company Research Context:
-Use this context only when it is relevant to the requirement.
----
-${companyContext}
----
-`
-    : "";
-
   return `
 You are a senior technical interviewer.
 
@@ -49,32 +84,9 @@ based on the following job requirement:
 
 "${requirement}"
 
-${contextSection}
+${buildCompanyContextSection(companyContext)}
 
-Rules:
-
-1. Requirement relevance
-- The job requirement is the PRIMARY driver for question generation.
-- Every question must directly assess knowledge or skills required by the requirement.
-- Across the questions, cover different important aspects of the requirement.
-- Do not repeatedly test the same concept using different wording.
-- Do not introduce unrelated technologies or concepts.
-
-2. Company context
-- Company research is SECONDARY context used to make questions more relevant to the company.
-- Use company context when it naturally fits the requirement.
-- Do not force company-specific context into every question.
-- If company context is not relevant, generate the question from the requirement alone.
-- Do NOT invent company-specific facts that are not present in the provided context.
-
-3. Difficulty
-- Distribute difficulty based on the number of questions:
-  - count = 1: MEDIUM
-  - count = 2: 1 EASY, 1 MEDIUM
-  - count = 3: 1 EASY, 1 MEDIUM, 1 HARD
-  - count >= 4: include EASY, MEDIUM, and HARD, with most questions being MEDIUM.
-- Difficulty should also be appropriate for the actual requirement.
-- Do not make a question artificially difficult just to satisfy the difficulty distribution.
+${COMMON_QUESTION_RULES}
 
 4. Question quality
 - Each question must be specific, clear, and answerable.
@@ -108,16 +120,6 @@ export function generateBehavioralQuestionsPrompt(
   count: number,
   companyContext?: string,
 ) {
-  const contextSection = companyContext
-    ? `
-Company Research Context:
-Use this context only when it is relevant to the requirement.
----
-${companyContext}
----
-`
-    : "";
-
   return `
 You are an experienced hiring manager conducting behavioral interviews.
 
@@ -126,48 +128,27 @@ based on the following job requirement:
 
 "${requirement}"
 
-${contextSection}
+${buildCompanyContextSection(companyContext)}
 
-Rules:
+${COMMON_QUESTION_RULES}
 
-1. Requirement relevance
-- The job requirement is the PRIMARY driver for question generation.
-- Every question must assess soft skills, behavior, judgment, or experience relevant to the requirement.
-- Across the questions, cover different aspects of the requirement.
-- Do not repeatedly test the same behavior using different wording.
-- Do not introduce unrelated soft skills or situations.
-
-2. Company context
-- Company research is SECONDARY context used to make questions more relevant to the company.
-- Use company culture, values, working style, products, or domain only when it naturally fits the requirement.
-- Do not force company-specific context into every question.
-- If company context is not relevant, generate the question from the requirement alone.
-- Do NOT invent company-specific facts that are not present in the provided context.
-
-3. Behavioral question quality
+4. Behavioral question quality
 - Prefer questions asking about the candidate's actual past experiences.
 - Questions should encourage the candidate to explain the situation, their specific actions, decisions, and outcome.
 - Use STAR-style framing (Situation, Task, Action, Result) where appropriate.
 - Avoid generic hypothetical questions such as "What would you do if...?" unless the requirement specifically calls for hypothetical judgment.
 - Avoid questions that can be answered with a simple yes/no response.
 
-4. Difficulty
-- Distribute difficulty based on the number of questions:
-  - count = 1: MEDIUM
-  - count = 2: 1 EASY, 1 MEDIUM
-  - count = 3: 1 EASY, 1 MEDIUM, 1 HARD
-  - count >= 4: include EASY, MEDIUM, and HARD, with most questions being MEDIUM.
-- Behavioral difficulty should reflect the complexity of the situation being explored:
-  - EASY: straightforward experience with a clear outcome.
-  - MEDIUM: requires handling a challenge, disagreement, or ambiguity.
-  - HARD: involves significant conflict, competing priorities, failure, difficult judgment, or multiple stakeholders.
-- Do not make a question artificially difficult just to satisfy the difficulty distribution.
+5. Behavioral difficulty criteria
+- EASY: straightforward experience with a clear outcome.
+- MEDIUM: requires handling a challenge, disagreement, or ambiguity.
+- HARD: involves significant conflict, competing priorities, failure, difficult judgment, or multiple stakeholders.
 
-5. Answer
+6. Answer
 - Provide an exemplary model response demonstrating the STAR method (Situation, Task, Action, Result).
 - Illustrate strong ownership, proactive problem-solving, collaboration, and measurable outcomes.
 
-6. Guidance
+7. Guidance
 - Guidance should describe what a strong answer should demonstrate.
 - Include 2-4 important positive signals.
 - Include relevant red flags to watch for.
@@ -188,16 +169,6 @@ export function generateSystemDesignQuestionsPrompt(
   count: number,
   companyContext?: string,
 ) {
-  const contextSection = companyContext
-    ? `
-Company Research Context:
-Use this context only when it is relevant to the requirement.
----
-${companyContext}
----
-`
-    : "";
-
   return `
 You are a principal engineer conducting a system design interview.
 
@@ -206,25 +177,11 @@ based on the following job requirement:
 
 "${requirement}"
 
-${contextSection}
+${buildCompanyContextSection(companyContext)}
 
-Rules:
+${COMMON_QUESTION_RULES}
 
-1. Requirement relevance
-- The job requirement is the PRIMARY driver for question generation.
-- Every question must assess system design knowledge or architectural ability relevant to the requirement.
-- Across the questions, cover different important aspects of the requirement.
-- Do not repeatedly test the same architectural concept using different wording.
-- Do not introduce unrelated technologies or architectural concepts.
-
-2. Company context
-- Company research is SECONDARY context used to make the design problem more relevant to the company.
-- Use company products, domain, architecture, infrastructure, or scale only when supported by the provided context.
-- Do not force company-specific context into every question.
-- If company context is not relevant, generate the question from the requirement alone.
-- Do NOT invent company-specific facts that are not present in the provided context.
-
-3. System design question quality
+4. System design question quality
 - Questions should require the candidate to design or reason about a system, service, API, or architecture.
 - Prefer realistic design problems over questions that simply ask the candidate to define a concept.
 - Depending on the requirement, consider relevant areas such as:
@@ -245,23 +202,16 @@ Rules:
 - Only include areas that are relevant to the specific design problem.
 - Do not unnecessarily introduce microservices, distributed systems, or other advanced architecture patterns.
 
-4. Difficulty
-- Distribute difficulty based on the number of questions:
-  - count = 1: MEDIUM
-  - count = 2: 1 EASY, 1 MEDIUM
-  - count = 3: 1 EASY, 1 MEDIUM, 1 HARD
-  - count >= 4: include EASY, MEDIUM, and HARD, with most questions being MEDIUM.
-- Difficulty should reflect the architectural complexity of the problem:
-  - EASY: small system with limited scale and straightforward requirements.
-  - MEDIUM: multiple components with meaningful trade-offs and moderate scale.
-  - HARD: large-scale or distributed system with significant scalability, reliability, consistency, or fault-tolerance challenges.
-- Do not make a question artificially difficult just to satisfy the difficulty distribution.
+5. System design difficulty criteria
+- EASY: small system with limited scale and straightforward requirements.
+- MEDIUM: multiple components with meaningful trade-offs and moderate scale.
+- HARD: large-scale or distributed system with significant scalability, reliability, consistency, or fault-tolerance challenges.
 
-5. Answer
+6. Answer
 - Provide a structured, in-depth architectural solution to the design problem.
 - Outline key components, data flow, API design, storage/caching decisions, trade-offs, and scalability/reliability considerations.
 
-6. Guidance
+7. Guidance
 - Guidance should outline 3-5 important components, decisions, or trade-offs a strong answer should address.
 - Focus on architecture and reasoning rather than requiring one specific implementation.
 - Accept multiple valid architectural approaches when appropriate.
@@ -281,16 +231,6 @@ export function generateRoleSpecificQuestionsPrompt(
   count: number,
   companyContext?: string,
 ) {
-  const contextSection = companyContext
-    ? `
-Company Research Context:
-Use this context only when it is relevant to the requirement.
----
-${companyContext}
----
-`
-    : "";
-
   return `
 You are a domain expert interviewing candidates for a specialized role.
 
@@ -299,25 +239,11 @@ based on the following job requirement:
 
 "${requirement}"
 
-${contextSection}
+${buildCompanyContextSection(companyContext)}
 
-Rules:
+${COMMON_QUESTION_RULES}
 
-1. Requirement relevance
-- The job requirement is the PRIMARY driver for question generation.
-- Every question must assess practical knowledge, experience, judgment, or domain expertise relevant to the requirement.
-- Across the questions, cover different important aspects of the requirement.
-- Do not repeatedly test the same skill using different wording.
-- Do not introduce unrelated technologies, tools, or responsibilities.
-
-2. Company context
-- Company research is SECONDARY context used to make questions more relevant to the company.
-- Use company tools, workflows, products, processes, or domain practices only when supported by the provided context.
-- Do not force company-specific context into every question.
-- If company context is not relevant, generate the question from the requirement alone.
-- Do NOT invent company-specific facts that are not present in the provided context.
-
-3. Role-specific question quality
+4. Role-specific question quality
 - Focus on practical, real-world situations relevant to the role.
 - Prefer questions that assess how the candidate has applied their knowledge rather than questions that only test definitions.
 - Where appropriate, ask about tools, workflows, decision-making, troubleshooting, trade-offs, and best practices.
@@ -325,23 +251,16 @@ Rules:
 - Do not assume experience, tools, or responsibilities that are not supported by the requirement or company context.
 - Avoid generic behavioral questions unless they directly relate to the role-specific requirement.
 
-4. Difficulty
-- Distribute difficulty based on the number of questions:
-  - count = 1: MEDIUM
-  - count = 2: 1 EASY, 1 MEDIUM
-  - count = 3: 1 EASY, 1 MEDIUM, 1 HARD
-  - count >= 4: include EASY, MEDIUM, and HARD, with most questions being MEDIUM.
-- Difficulty should reflect the practical complexity of the question:
-  - EASY: straightforward role-related task or decision.
-  - MEDIUM: requires practical experience and consideration of multiple factors.
-  - HARD: involves complex trade-offs, ambiguity, failure scenarios, or significant responsibility.
-- Do not make a question artificially difficult just to satisfy the difficulty distribution.
+5. Role-specific difficulty criteria
+- EASY: straightforward role-related task or decision.
+- MEDIUM: requires practical experience and consideration of multiple factors.
+- HARD: involves complex trade-offs, ambiguity, failure scenarios, or significant responsibility.
 
-5. Answer
+6. Answer
 - Provide a detailed, practical model answer demonstrating real-world domain expertise and best practices.
 - Cover realistic workflows, tools, troubleshooting, and decision-making criteria.
 
-6. Guidance
+7. Guidance
 - Guidance should explain what distinguishes a strong answer from a weak answer.
 - Include 2-4 important positive signals.
 - Include relevant red flags where appropriate.

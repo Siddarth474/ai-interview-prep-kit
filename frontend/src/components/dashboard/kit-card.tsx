@@ -22,6 +22,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { kitService, type KitData } from "@/services/kit.service";
 import { useRouter } from "next/navigation";
+import { notify } from "@/lib/notification";
 
 interface KitCardProps {
   kit?: KitData;
@@ -167,9 +168,11 @@ export function KitCard({
     try {
       setIsDeleting(true);
       await kitService.deleteKit(kit.id);
+      notify.success("Interview kit deleted");
       onDelete?.(kit.id);
     } catch (error) {
       console.error("Failed to delete kit:", error);
+      notify.error("Failed to delete interview kit. Please try again.");
     } finally {
       setIsDeleting(false);
     }
