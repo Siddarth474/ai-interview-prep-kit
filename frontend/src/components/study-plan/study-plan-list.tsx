@@ -19,6 +19,7 @@ import {
   type KitRequirement,
 } from "@/services/kit.service";
 import { useKitStore } from "@/hooks/use-kit-store";
+import { notify } from "@/lib/notification";
 
 export function getDayDateLabel(
   dayNumber: number,
@@ -198,9 +199,13 @@ export function StudyPlanList({
           studySchedule: res.data.studySchedule,
           studyPlan: res.data.studySchedule,
         });
+        if (willBeCompleted) {
+          notify.success(`Day ${dayNumber} marked as completed!`);
+        }
       }
     } catch (err) {
       console.error("Failed to update day completion:", err);
+      notify.error("Failed to update day progress. Please try again.");
     }
   };
 

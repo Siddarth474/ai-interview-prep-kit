@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Loader2, RotateCw, Sparkles, Clock, AlertCircle } from "lucide-react";
 import {
   Dialog,
@@ -23,6 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useQuestion } from "@/hooks/use-question";
 import { useKitStore } from "@/hooks/use-kit-store";
+import { notify } from "@/lib/notification";
 
 export interface RegenerateQuestionsDialogProps {
   open: boolean;
@@ -88,12 +89,16 @@ export function RegenerateQuestionsDialog({
 
   const handleConfirmRegenerate = async () => {
     if (mode === "topic") {
-      setError("Topic-based regeneration is coming soon. Please regenerate by category.");
+      const msg = "Topic-based regeneration is coming soon. Please regenerate by category.";
+      setError(msg);
+      notify.error(msg);
       return;
     }
 
     if (!selectedCategory) {
-      setError("Please select a category to regenerate");
+      const msg = "Please select a category to regenerate";
+      setError(msg);
+      notify.error(msg);
       return;
     }
 
@@ -101,10 +106,12 @@ export function RegenerateQuestionsDialog({
       await regenerateQuestions(kitId, selectedCategory);
       // Synchronize kit store
       await fetchKit(kitId, true);
+      notify.success("Questions regenerated successfully");
       onOpenChange(false);
       onSuccess?.();
-    } catch {
-      // Error handled by useQuestion
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to regenerate questions";
+      notify.error(msg);
     }
   };
 

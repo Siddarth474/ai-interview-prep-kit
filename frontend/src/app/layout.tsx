@@ -17,6 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 import { GlobalServerError } from "@/components/global-server-error";
+import { Toaster } from "@/components/ui/toast";
 
 export const metadata: Metadata = {
   title: "Interview Prep Kit",
@@ -45,6 +46,7 @@ export default function RootLayout({
         <TooltipProvider>
           <GlobalServerError />
           {children}
+          <Toaster />
         </TooltipProvider>
       </body>
     </html>

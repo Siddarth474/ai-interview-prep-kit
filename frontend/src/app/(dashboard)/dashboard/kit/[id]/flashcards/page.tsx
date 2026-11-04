@@ -1,22 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useParams } from "next/navigation";
-import { CheckCircle2, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useKitStore } from "@/hooks/use-kit-store";
 import { FlashcardGrid } from "@/components/flashcard";
 import KitLoading from "../loading";
-import { cn } from "@/lib/utils";
 import type { Flashcard } from "@/services/flashcard.service";
 
 export default function KitFlashcardsPage() {
   const params = useParams();
   const id = (params?.id as string) || "";
   const { kit, loading, fetchKit } = useKitStore();
-  const [isRegenerating, setIsRegenerating] = useState(false);
+  //const [isRegenerating, setIsRegenerating] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -24,15 +22,15 @@ export default function KitFlashcardsPage() {
     }
   }, [id, fetchKit]);
 
-  const handleRegenerate = async () => {
-    if (!id || isRegenerating) return;
-    try {
-      setIsRegenerating(true);
-      await fetchKit(id, true);
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
+  // const handleRegenerate = async () => {
+  //   if (!id || isRegenerating) return;
+  //   try {
+  //     setIsRegenerating(true);
+  //     await fetchKit(id, true);
+  //   } finally {
+  //     setIsRegenerating(false);
+  //   }
+  // };
 
   if (loading && !kit) {
     return <KitLoading />;
@@ -64,7 +62,7 @@ export default function KitFlashcardsPage() {
           </div>
         </div>
 
-        <Button
+        {/* <Button
           variant="outline"
           onClick={handleRegenerate}
           disabled={isRegenerating}
@@ -74,7 +72,7 @@ export default function KitFlashcardsPage() {
             className={cn("size-3.5", isRegenerating && "animate-spin")}
           />
           <span>Regenerate</span>
-        </Button>
+        </Button> */}
       </div>
 
       {/* Progress Bar */}

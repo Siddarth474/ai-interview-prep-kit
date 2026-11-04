@@ -5,8 +5,6 @@ import { ingestionService } from "../research/ingestion.service.js";
 import { researchService } from "../research/research.service.js";
 import { companyBriefService } from "../research/company-brief.service.js";
 import { studyScheduleService } from "../studySchedule/studySchedule.service.js";
-import { interviewKitService } from "../interviewKit/interviewkit.service.js";
-import { KitStatus } from "../../../generated/prisma/enums.js";
 
 export const generationService = {
   async generateKit(kitId: string) {
@@ -33,15 +31,6 @@ export const generationService = {
         `[GenerationService] Generation failed for kit: ${kitId}`,
         error,
       );
-
-      try {
-        await interviewKitService.updateKitStatus(kitId, KitStatus.FAILED);
-      } catch (dbError) {
-        console.error(
-          `[GenerationService] Failed to update kit status to FAILED:`,
-          dbError,
-        );
-      }
       throw error;
     }
   },

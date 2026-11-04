@@ -9,5 +9,20 @@ export const researchQueue = new Queue<InterviewKitJobData>(
   QUEUE_NAMES.GENERATE,
   {
     connection: redis,
+    defaultJobOptions: {
+      attempts: 2,
+      backoff: {
+        type: "exponential",
+        delay: 5000,
+      },
+      removeOnComplete: {
+        age: 3600,
+        count: 30,
+      },
+      removeOnFail: {
+        age: 24 * 3600,
+        count: 50,
+      },
+    },
   },
 );

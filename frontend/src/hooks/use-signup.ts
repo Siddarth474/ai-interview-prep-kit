@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/services/auth.service";
+import { notify } from "@/lib/notification";
 
 export function useSignup() {
   const router = useRouter();
@@ -55,22 +56,26 @@ export function useSignup() {
       });
 
       if (res.success) {
+        notify.success("Account created successfully!");
         if (res.data?.user) {
           localStorage.setItem("user", JSON.stringify(res.data.user));
         }
         router.push("/dashboard");
       } else {
-        setError(res.message || "Failed to create account. Please try again.");
+        const msg = res.message || "Failed to create account. Please try again.";
+        setError(msg);
+        notify.error(msg);
       }
     } catch (err: unknown) {
       const axiosError = err as {
         response?: { data?: { message?: string } };
         message?: string;
       };
-      setError(
+      const msg =
         axiosError.response?.data?.message ||
-          "Failed to create account. Please check your details and try again.",
-      );
+        "Failed to create account. Please check your details and try again.";
+      setError(msg);
+      notify.error(msg);
     } finally {
       setIsLoading(false);
     }

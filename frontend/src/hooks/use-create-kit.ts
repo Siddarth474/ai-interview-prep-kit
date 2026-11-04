@@ -5,6 +5,7 @@ import {
   type CreateKitPayload,
   type KitData,
 } from "@/services/kit.service";
+import { notify } from "@/lib/notification";
 
 interface UseCreateKitOptions {
   onOpenChange: (open: boolean) => void;
@@ -75,10 +76,13 @@ export function useCreateKit({
 
       const res = await kitService.createKit(payload);
       if (res.success) {
+        notify.success("Interview kit created! Research is starting...");
         onSuccess?.(res.data);
         handleClose(false);
       } else {
-        setError(res.message || "Failed to create kit. Please try again.");
+        const errorMsg = res.message || "Failed to create kit. Please try again.";
+        setError(errorMsg);
+        notify.error(errorMsg);
       }
     } catch (err: unknown) {
       const message =
@@ -86,6 +90,7 @@ export function useCreateKit({
           (err.response?.data as { message?: string } | undefined)?.message) ||
         "Failed to generate kit. Please check your inputs and try again.";
       setError(message);
+      notify.error(message);
     } finally {
       setIsLoading(false);
     }

@@ -215,8 +215,8 @@ cd AI-interview-prep-kit
 
    # Google Gemini API
    GEMINI_API_KEY="AIzaSy..."
-   GEMINI_MODEL="gemini-2.5-flash"
-   EMBEDDING_MODEL="text-embedding-004"
+   GEMINI_MODEL="gemini-3.5-flash-lite"
+   EMBEDDING_MODEL="gemini-embedding-002"
    ```
 
 4. **Enable pgvector and Run Database Migrations**:
@@ -243,7 +243,8 @@ cd AI-interview-prep-kit
 2. **Configure Environment Variables**:
    Create a `.env` file in the `frontend/` directory:
    ```env
-   NEXT_PUBLIC_API_URL=http://localhost:5001/api
+   NEXT_PUBLIC_API_URL=/api
+   BACKEND_URL=http://localhost:5000
    ```
 
 ---

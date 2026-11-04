@@ -7,6 +7,7 @@ import {
   type FlashcardStatus,
   type FlashcardProgress,
 } from "@/services/flashcard.service";
+import { notify } from "@/lib/notification";
 
 export function useFlashcard() {
   const [isReviewing, setIsReviewing] = useState(false);
@@ -37,6 +38,7 @@ export function useFlashcard() {
           (err instanceof Error ? err.message : null) ||
           "Failed to review flashcard";
         setError(message);
+        notify.error(message);
         return null;
       } finally {
         setIsReviewing(false);

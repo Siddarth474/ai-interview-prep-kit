@@ -8,8 +8,9 @@ import { KitStatus } from "../../generated/prisma/enums.js";
 const generationWorker = new Worker<InterviewKitJobData>(
   QUEUE_NAMES.GENERATE,
   async (job) => {
+    const attempt = job.attemptsMade + 1;
     console.log(
-      `[Worker] Processing research job ${job.id} for kit: ${job.data.kitId}`,
+      `[Worker] Processing research job ${job.id} (attempt ${attempt}) for kit: ${job.data.kitId}`,
     );
 
     await generationService.generateKit(job.data.kitId);
@@ -21,6 +22,8 @@ const generationWorker = new Worker<InterviewKitJobData>(
   {
     connection: redis,
     concurrency: 1,
+    lockDuration: 120000, // 2 minutes lock to prevent false-alarm stalled jobs
+    maxStalledCount: 1,
   },
 );
 
@@ -29,16 +32,46 @@ generationWorker.on("completed", (job) => {
 });
 
 generationWorker.on("failed", async (job, error) => {
-  console.error(`[Worker] Job ${job?.id} failed:`, error.message);
+  const attemptsMade = job?.attemptsMade ?? 1;
+  const maxAttempts = job?.opts?.attempts ?? 1;
+  const hasRetriesLeft = attemptsMade < maxAttempts;
+
+  console.error(
+    `[Worker] Job ${job?.id} attempt ${attemptsMade}/${maxAttempts} failed:`,
+    error.message,
+  );
+
+  if (hasRetriesLeft) {
+    console.log(
+      `[Worker] Job ${job?.id} has retries remaining. Waiting for backoff retry...`,
+    );
+    return;
+  }
+
+  // All retries exhausted -> mark kit as FAILED
   if (job?.data?.kitId) {
     try {
       await interviewKitService.updateKitStatus(job.data.kitId, KitStatus.FAILED);
-      console.log(`[Worker] Successfully marked kit ${job.data.kitId} as FAILED in DB`);
+      console.log(
+        `[Worker] All retries exhausted. Marked kit ${job.data.kitId} as FAILED in DB`,
+      );
     } catch (err) {
       console.error(`[Worker] Failed to update kit status to FAILED:`, err);
     }
   }
 });
+
+generationWorker.on("error", (err) => {
+  console.error("[Worker] Redis connection/queue error:", err.message);
+});
+
+const shutdown = async () => {
+  console.log("[Worker] Shutting down worker gracefully...");
+  await generationWorker.close();
+};
+
+process.on("SIGTERM", shutdown);
+process.on("SIGINT", shutdown);
 
 console.log("[Worker] Research worker started and listening for jobs...");
 

@@ -23,6 +23,7 @@ import {
 import { useQuestion } from "@/hooks/use-question";
 import { useKitStore } from "@/hooks/use-kit-store";
 import type { KitData, KitRequirement, KitQuestion } from "@/services/kit.service";
+import { notify } from "@/lib/notification";
 
 export interface QuestionData {
   id?: string;
@@ -126,13 +127,17 @@ export function UpdateQuestionDialog({
     e.preventDefault();
 
     if (!formData.question.trim()) {
-      setError("Question text cannot be empty");
+      const msg = "Question text cannot be empty";
+      setError(msg);
+      notify.error(msg);
       return;
     }
 
     const questionId = question.id;
     if (!questionId) {
-      setError("Question ID is missing");
+      const msg = "Question ID is missing";
+      setError(msg);
+      notify.error(msg);
       return;
     }
 
@@ -172,9 +177,13 @@ export function UpdateQuestionDialog({
         updateKit(updatePayload);
       }
 
+      notify.success("Question updated successfully");
       onSuccess?.({ ...question, ...updated, ...formData, isEdited: true });
       onOpenChange(false);
-    } catch {}
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update question";
+      notify.error(msg);
+    }
   };
 
   return (
