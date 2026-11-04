@@ -88,8 +88,8 @@ export const flashcardService = {
     kitId: string,
     flashcardId: string,
     status: FlashcardStatus
-  ): Promise<ApiResponse<FlashcardProgress>> {
-    const response = await api.post<ApiResponse<FlashcardProgress>>(
+  ): Promise<ApiResponse<Flashcard>> {
+    const response = await api.post<ApiResponse<Flashcard>>(
       `/kits/${kitId}/flashcards/${flashcardId}/review`,
       { status }
     );

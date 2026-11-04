@@ -156,6 +156,11 @@ export const interviewKitService = {
     const kits = await prisma.interviewKit.findMany({
       where: { userId },
       include: {
+        roleBreakdown: {
+          select: {
+            roleTitle: true,
+          },
+        },
         questions: {
           select: {
             id: true,
@@ -200,6 +205,8 @@ export const interviewKitService = {
 
         return {
           ...kit,
+          role: kit.roleBreakdown?.roleTitle || null,
+          roleTitle: kit.roleBreakdown?.roleTitle || null,
           questionsCount: kit.questions.length,
           flashcardsCount: kit.flashcards.length,
           progress,

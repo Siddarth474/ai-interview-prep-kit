@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import {
-  Book,
+  BookOpenText,
   Calendar,
   ChevronsUpDown,
   FileText,
@@ -82,8 +82,20 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname();
   const params = useParams();
   const { user } = useUser();
-  const { isMobile } = useSidebar();
+  const { isMobile, setOpenMobile } = useSidebar();
   const [isLoggingOut, setIsLoggingOut] = React.useState(false);
+
+  const handleNavClick = React.useCallback(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [isMobile, setOpenMobile]);
+
+  React.useEffect(() => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  }, [pathname, isMobile, setOpenMobile]);
 
   const kitId = params?.id as string | undefined;
   const isKitView = Boolean(kitId);
@@ -96,6 +108,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const handleLogout = async () => {
     if (isLoggingOut) return;
+    if (isMobile) setOpenMobile(false);
     try {
       setIsLoggingOut(true);
       await authService.logout();
@@ -129,10 +142,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <div className="flex items-center gap-2.5 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:w-full">
           <Link
             href="/dashboard"
+            onClick={handleNavClick}
             className="flex items-center gap-2.5 text-sm font-semibold tracking-[-0.02em] text-white transition-opacity hover:opacity-90 group-data-[collapsible=icon]:justify-center"
           >
             <div className="flex size-7 shrink-0 items-center justify-center rounded-lg bg-white/10 text-white">
-              <Book className="size-4" />
+              <BookOpenText className="size-4" />
             </div>
             <span className="group-data-[collapsible=icon]:hidden font-medium">
               PrepKit
@@ -156,7 +170,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     className="group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:justify-center"
                   >
                     <SidebarMenuButton
-                      render={<Link href={item.url} />}
+                      render={<Link href={item.url} onClick={handleNavClick} />}
+                      onClick={handleNavClick}
                       isActive={isActive}
                       tooltip={item.title}
                       className="h-10 px-3 text-white/70 hover:text-white hover:bg-white/10 data-[active=true]:bg-white/15 data-[active=true]:text-white transition-colors group-data-[collapsible=icon]:size-8! group-data-[collapsible=icon]:p-0! group-data-[collapsible=icon]:flex group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:justify-center"

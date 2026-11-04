@@ -212,8 +212,7 @@ export default function KitQuestionsPage() {
 
       return Array.from(groupsMap.values());
     }
-
-    // 3. Fallback to empty list if kit has no requirements or questions yet
+    
     return [];
   }, [requirements, allQuestions]);
 

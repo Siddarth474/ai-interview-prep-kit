@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import { Card } from "@/components/ui/card";
 import type { KitData } from "@/services/kit.service";
 
@@ -12,12 +11,12 @@ export function KitStatsCards({ kit }: KitStatsCardsProps) {
   const requirementsCount =
     kit?.requirements?.length ??
     kit?.requirementsCount ??
-    12;
+    0;
 
   const questionsCount =
     kit?.questionsCount ??
     (Array.isArray(kit?.questions) ? kit?.questions.length : undefined) ??
-    86;
+    0;
 
   const flashcardsCount =
     kit?.flashcardsCount ??
@@ -26,9 +25,9 @@ export function KitStatsCards({ kit }: KitStatsCardsProps) {
       : Array.isArray(kit?.flashcards)
       ? kit?.flashcards.length
       : undefined) ??
-    64;
+    0;
 
-  const studyDays = kit?.daysAvailable ?? 30;
+  const studyDays = kit?.daysAvailable ?? 0;
 
   const stats = [
     {

@@ -105,7 +105,6 @@ export const aiService = {
         count,
       });
 
-      //console.log("This is questions", questions);
 
       const questionsWithTopic = questions.map((q) => ({
         ...q,
@@ -130,7 +129,6 @@ export const aiService = {
   },
 
   async generateQuestionsForRequirement(input: Input) {
-    // Retrieve relevant company research chunks for this requirement
     const query = `${input.topic}: ${input.text}`;
     const retrievedChunks = await findRelevantChunks(input.kitId, query);
     const companyContext = formatContextForPrompt(retrievedChunks);

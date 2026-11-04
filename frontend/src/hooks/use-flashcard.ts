@@ -6,6 +6,7 @@ import {
   flashcardService,
   type FlashcardStatus,
   type FlashcardProgress,
+  type Flashcard,
 } from "@/services/flashcard.service";
 import { notify } from "@/lib/notification";
 
@@ -18,7 +19,7 @@ export function useFlashcard() {
       kitId: string,
       flashcardId: string,
       status: FlashcardStatus
-    ): Promise<FlashcardProgress | null> => {
+    ): Promise<Flashcard | FlashcardProgress | null> => {
       setIsReviewing(true);
       setError(null);
       try {

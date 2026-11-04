@@ -228,34 +228,34 @@ export function StudyPlanList({
         open={Boolean(previewDay)}
         onOpenChange={(open) => !open && setPreviewDay(null)}
       >
-        <DialogContent className="sm:max-w-md bg-[#131515] border-white/10 text-white rounded-2xl">
+        <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md bg-[#131515] border-white/10 text-white rounded-2xl p-5 sm:p-6">
           <DialogHeader>
-            <div className="size-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 mb-3">
-              <Lock className="size-5" />
+            <div className="size-10 sm:size-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60 mb-2 sm:mb-3">
+              <Lock className="size-4 sm:size-5" />
             </div>
-            <DialogTitle className="text-xl font-bold text-white">
+            <DialogTitle className="text-lg sm:text-xl font-bold text-white leading-snug">
               Day {previewDay?.dayNumber}: {previewDay?.topicTitle}
             </DialogTitle>
-            <DialogDescription className="text-white/60 text-sm mt-1">
+            <DialogDescription className="text-white/60 text-xs sm:text-sm mt-1 leading-relaxed">
               Scheduled for {previewDay?.dateLabel}. This module includes{" "}
               {previewDay?.questionsCount} practice questions and{" "}
               {previewDay?.flashcardsCount} flashcards.
             </DialogDescription>
           </DialogHeader>
 
-          <DialogFooter className="flex sm:justify-between items-center gap-2 mt-4">
+          <DialogFooter className="flex flex-row items-center gap-2.5 sm:gap-3 mt-4 sm:mt-5 w-full">
             <Button
               variant="outline"
               onClick={() => setPreviewDay(null)}
-              className="border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl"
+              className="flex-1 min-w-0 border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl h-10 text-sm font-medium"
             >
               Close
             </Button>
             <Button
               onClick={confirmUnlock}
-              className="bg-white hover:bg-white/90 text-black font-semibold rounded-xl flex items-center gap-1.5"
+              className="flex-1 min-w-0 bg-white hover:bg-white/90 text-black font-semibold rounded-xl h-10 text-sm flex items-center justify-center gap-1.5"
             >
-              <Unlock className="size-4" />
+              <Unlock className="size-4 shrink-0" />
               <span>Unlock Day</span>
             </Button>
           </DialogFooter>

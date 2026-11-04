@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, FileText } from "lucide-react";
+import { ArrowLeft, FileText, ChevronDown } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -23,6 +23,14 @@ export default function KitRequirementsPage() {
   const params = useParams();
   const id = (params?.id as string) || "";
   const { kit, loading, fetchKit } = useKitStore();
+  const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
+
+  const toggleExpand = (reqId: string) => {
+    setExpandedIds((prev) => ({
+      ...prev,
+      [reqId]: !prev[reqId],
+    }));
+  };
 
   useEffect(() => {
     if (id) {
@@ -67,27 +75,60 @@ export default function KitRequirementsPage() {
       <div className="flex flex-col gap-2.5 sm:gap-3 w-full">
         {requirements.length > 0 ? (
           requirements.map((req, idx) => {
+            const reqKey = req.id || `req-${idx}`;
             const position = req.position ?? idx + 1;
             const category = (req.category || "TECHNICAL").toUpperCase();
             const importance = (req.importance || "HIGH").toUpperCase();
+            const isExpanded = Boolean(expandedIds[reqKey]);
 
             return (
               <Card
-                key={req.id || idx}
-                className="rounded-lg border border-white/10 bg-[#111414] hover:border-white/20 transition-all duration-200 px-4 py-3 sm:px-5 sm:py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm group"
+                key={reqKey}
+                onClick={() => toggleExpand(reqKey)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    toggleExpand(reqKey);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                className={cn(
+                  "rounded-lg border border-white/10 bg-[#111414] hover:border-white/20 hover:bg-white/2",
+                  "transition-all duration-200 px-4 py-3 sm:px-5 sm:py-3.5",
+                  "flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4",
+                  "shadow-sm group cursor-pointer select-none",
+                  isExpanded && "border-white/25 bg-white/3"
+                )}
               >
                 {/* Left Part: Index Box + Description */}
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
-                  <div className="size-8 sm:size-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-xs sm:text-sm font-semibold text-white/70 shrink-0 select-none group-hover:border-white/20 group-hover:text-white transition-colors">
+                <div className="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+                  <div className="size-8 sm:size-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-xs sm:text-sm font-semibold text-white/70 shrink-0 select-none group-hover:border-white/20 group-hover:text-white transition-colors mt-0.5">
                     {position}
                   </div>
-                  <p className="text-xs sm:text-sm font-medium text-white/90 leading-relaxed truncate sm:line-clamp-1">
-                    {req.text}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className={cn(
+                        "text-xs sm:text-sm font-medium text-white/90 leading-relaxed transition-all",
+                        !isExpanded && "line-clamp-1 sm:line-clamp-2"
+                      )}
+                    >
+                      {req.text}
+                    </p>
+                    <div className="flex items-center gap-1 mt-1 text-[11px] text-white/40 group-hover:text-white/70 transition-colors">
+                      <span>{isExpanded ? "Show less" : "Read more"}</span>
+                      <ChevronDown
+                        className={cn(
+                          "size-3 transition-transform duration-200",
+                          isExpanded && "rotate-180"
+                        )}
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Right Part: Category Badge + Importance Badge */}
-                <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end sm:self-auto pl-11 sm:pl-0">
+                <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 self-end sm:self-start sm:mt-1 pl-11 sm:pl-0">
                   <Badge
                     variant="outline"
                     className="h-6 px-2.5 py-0 rounded-lg border-white/10 bg-white/5 text-[10px] sm:text-xs font-semibold text-white/70 uppercase tracking-wider"
