@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { RotateCcw, Sparkles, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -32,26 +32,67 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
   const initialProgress =
     "progress" in card && card.progress ? card.progress : null;
   const [progress, setProgress] = useState<FlashcardProgress | null>(
-    initialProgress
+    initialProgress,
   );
   const [reviewedStatus, setReviewedStatus] = useState<FlashcardStatus | null>(
-    initialProgress?.status ?? null
+    initialProgress?.status ?? null,
   );
+  const [showNote, setShowNote] = useState<boolean>(
+    initialProgress?.status === "IN_PROGRESS",
+  );
+  const noteTimerRef = useRef<NodeJS.Timeout | null>(null);
   const [reviewingAction, setReviewingAction] =
     useState<FlashcardStatus | null>(null);
   const { reviewFlashcard, isReviewing } = useFlashcard();
   const number = String(index + 1).padStart(2, "0");
 
+  const triggerNoteDismiss = (duration = 3000) => {
+    if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+    noteTimerRef.current = setTimeout(() => {
+      setShowNote(false);
+    }, duration);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+    };
+  }, []);
+
+  const handleCardClick = () => {
+    setIsFlipped((prev) => !prev);
+    if (showNote) {
+      triggerNoteDismiss(2500);
+    }
+  };
+
   const handleReview = async (
     e: React.MouseEvent,
     status: FlashcardStatus,
-    autoFlip: boolean = false
+    autoFlip: boolean = false,
   ) => {
-    e.stopPropagation(); 
+    e.stopPropagation();
     if (autoFlip) {
-      setIsFlipped(true); 
+      setIsFlipped(true);
     }
-    setReviewedStatus(status);
+
+    const currentCount =
+      progress?.reviewCount ??
+      ("progress" in card ? card.progress?.reviewCount : undefined) ??
+      0;
+    const nextCount = currentCount + 1;
+
+    const optimisticStatus: FlashcardStatus =
+      status === "MASTERED" && nextCount >= 2 ? "MASTERED" : "IN_PROGRESS";
+
+    setReviewedStatus(optimisticStatus);
+
+    if (optimisticStatus === "IN_PROGRESS") {
+      setShowNote(true);
+      triggerNoteDismiss(3500);
+    } else {
+      setShowNote(false);
+    }
 
     if (card.id) {
       const currentKit = useKitStore.getState().kit;
@@ -61,18 +102,22 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
             ? {
                 ...f,
                 progress: f.progress
-                  ? { ...f.progress, status }
+                  ? {
+                      ...f.progress,
+                      status: optimisticStatus,
+                      reviewCount: nextCount,
+                    }
                   : {
                       id: f.id,
                       flashcardId: f.id,
                       userId: "",
-                      status,
-                      reviewCount: 1,
+                      status: optimisticStatus,
+                      reviewCount: nextCount,
                       createdAt: new Date().toISOString(),
                       updatedAt: new Date().toISOString(),
                     },
               }
-            : f
+            : f,
         );
         useKitStore.getState().updateKit({ flashcards: updatedFlashcards });
       }
@@ -82,20 +127,29 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
 
     setReviewingAction(status);
     try {
-      const updatedProgress = await reviewFlashcard(kitId, card.id, status);
+      const resData = await reviewFlashcard(kitId, card.id, status);
+      const updatedProgress: FlashcardProgress | null =
+        resData && "progress" in resData && resData.progress
+          ? (resData.progress as FlashcardProgress)
+          : (resData as FlashcardProgress | null);
+
       if (updatedProgress?.status) {
         setProgress(updatedProgress);
         setReviewedStatus(updatedProgress.status);
+        if (updatedProgress.status !== "IN_PROGRESS") {
+          setShowNote(false);
+        }
         if (card.id) {
           const currentKit = useKitStore.getState().kit;
           if (currentKit && Array.isArray(currentKit.flashcards)) {
-            const updatedFlashcards = currentKit.flashcards.map((f: Flashcard) =>
-              f.id === card.id
-                ? {
-                    ...f,
-                    progress: updatedProgress,
-                  }
-                : f
+            const updatedFlashcards = currentKit.flashcards.map(
+              (f: Flashcard) =>
+                f.id === card.id
+                  ? {
+                      ...f,
+                      progress: updatedProgress,
+                    }
+                  : f,
             );
             useKitStore.getState().updateKit({ flashcards: updatedFlashcards });
           }
@@ -108,14 +162,14 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
 
   return (
     <div
-      onClick={() => setIsFlipped((prev) => !prev)}
+      onClick={handleCardClick}
       className="group relative h-60 sm:h-72 perspective-distant cursor-pointer select-none"
     >
       <div
         className={cn(
           "relative w-full h-full transform-3d transition-transform duration-700 ease-[cubic-bezier(0.22,1,0.36,1)]",
           "group-hover:-translate-y-1",
-          isFlipped && "transform-[rotateY(180deg)]"
+          isFlipped && "transform-[rotateY(180deg)]",
         )}
       >
         {/* Front Face */}
@@ -126,7 +180,7 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
             "bg-linear-to-br from-[#1a1d1d] via-[#131515] to-[#0d0f0f]",
             "shadow-[0_8px_30px_-12px_rgba(0,0,0,0.8)]",
             "transition-[border-color,box-shadow] duration-300",
-            "group-hover:border-white/20 group-hover:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.9)]"
+            "group-hover:border-white/20 group-hover:shadow-[0_20px_45px_-15px_rgba(0,0,0,0.9)]",
           )}
         >
           {/* Ambient glow */}
@@ -158,10 +212,21 @@ export function FlashcardCard({ card, index, kitId }: FlashcardCardProps) {
             </p>
           </div>
 
+          {/* In-progress note: Masters after 2 reviews */}
+          {showNote &&
+            (reviewedStatus === "IN_PROGRESS" ||
+              progress?.status === "IN_PROGRESS") && (
+              <div className="relative pb-1 flex items-center z-10">
+                <span className="text-[10px] sm:text-[11px] text-amber-300/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full inline-flex items-center gap-1.5 animate-in fade-in duration-200">
+                  <span className="size-1 rounded-full bg-amber-400 shrink-0" />
+                  <span>Masters after 2 reviews</span>
+                </span>
+              </div>
+            )}
+
           {/* Bottom Bar: Action buttons on Front + Flip prompt */}
           <div className="relative flex items-center justify-between gap-2 pt-2 z-10">
             <div className="flex items-center gap-2">
-              {/* Still Learn -> Blackish button */}
               <button
                 type="button"
                 onClick={(e) => handleReview(e, "IN_PROGRESS", true)}

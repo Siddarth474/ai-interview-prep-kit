@@ -1,7 +1,7 @@
 import Link from "next/link";
 import {
   ArrowRight,
-  Book,
+  BookOpenText,
   ChartNoAxesCombined,
   FileText,
   PencilLine,
@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 const features = [
   {
@@ -41,7 +41,7 @@ function Logo() {
       href="/"
       className="flex items-center gap-2.5 text-[15px] font-semibold tracking-[-0.02em] text-white transition-opacity hover:opacity-90"
     >
-      <Book />
+      <BookOpenText />
       PrepKit
     </Link>
   );
@@ -102,7 +102,7 @@ export function LandingPage() {
           <Logo />
 
          
-          <nav className="hidden items-center gap-8 md:flex">
+          {/* <nav className="hidden items-center gap-8 md:flex">
             {["Features", "How it works"].map((item) => (
               <Button
                 key={item}
@@ -112,7 +112,7 @@ export function LandingPage() {
                 {item}
               </Button>
             ))}
-          </nav>
+          </nav> */}
 
           {/* Header CTA */}
           <div className="flex items-center gap-3">

@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Trash2,
   Loader2,
+  Briefcase,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -59,6 +60,15 @@ function getCompanyName(kit: KitData): string {
     }
   }
   return "Company";
+}
+
+function getJobRole(kit: KitData): string | undefined {
+  if (kit.role && kit.role.trim()) return kit.role.trim();
+  if (kit.roleTitle && kit.roleTitle.trim()) return kit.roleTitle.trim();
+  if (kit.roleBreakdown?.roleTitle && kit.roleBreakdown.roleTitle.trim()) {
+    return kit.roleBreakdown.roleTitle.trim();
+  }
+  return undefined;
 }
 
 function getFormattedDate(kit: KitData): string {
@@ -123,6 +133,7 @@ export function KitCard({
 }: KitCardProps) {
   
   const company = getCompanyName(kit);
+  const jobRole = getJobRole(kit);
   const createdDate = getFormattedDate(kit);
   const daysCount = kit.daysAvailable ?? 14;
   const progress = kit.progress ?? 0;
@@ -160,6 +171,7 @@ export function KitCard({
   };
 
   const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isRoleExpanded, setIsRoleExpanded] = React.useState(false);
 
   const handleDeleteKit = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -188,18 +200,46 @@ export function KitCard({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
           <div
             aria-hidden="true"
-            className="size-11 shrink-0 rounded-xl bg-white/8 border border-white/10 flex items-center justify-center font-bold text-purple-600 text-base shadow-inner select-none"
+            className="size-11 shrink-0 rounded-xl bg-white/8 border border-white/10 flex items-center justify-center font-bold text-purple-600 text-base shadow-inner select-none mt-0.5"
           >
             {initial}
           </div>
 
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <h3 className="text-base font-semibold text-white tracking-tight leading-snug truncate">
               {company}
             </h3>
+            {jobRole && (
+              <button
+                type="button"
+                data-no-card-click="true"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsRoleExpanded((prev) => !prev);
+                }}
+                className={cn(
+                  "text-xs text-white/60 font-medium mt-0.5 flex items-start gap-1.5 text-left w-full cursor-pointer hover:text-white/80 transition-colors group/role",
+                  !isRoleExpanded && "truncate"
+                )}
+                title={isRoleExpanded ? "Click to collapse role" : `Click to see full role: ${jobRole}`}
+                aria-label={isRoleExpanded ? "Collapse job role" : "Expand full job role"}
+              >
+                <Briefcase className="size-3 text-white/40 shrink-0 mt-0.5 group-hover/role:text-white/60 transition-colors" />
+                <span
+                  className={cn(
+                    "flex-1 min-w-0",
+                    !isRoleExpanded
+                      ? "truncate"
+                      : "break-words whitespace-normal leading-relaxed text-white/80"
+                  )}
+                >
+                  {jobRole}
+                </span>
+              </button>
+            )}
           </div>
         </div>
 
