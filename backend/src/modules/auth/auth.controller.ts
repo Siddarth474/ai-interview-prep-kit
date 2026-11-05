@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { signupSchema, loginSchema } from "./auth.schema.js";
 import { AuthService } from "./auth.service.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { formatZodError } from "../../utils/formatZodError.js";
 
 const isProduction = process.env.NODE_ENV === "production";
 
@@ -47,9 +48,11 @@ export const AuthHandler = {
       const parseResult = signupSchema.safeParse(req.body);
 
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(new ApiResponse(400, null, "Signup Validation failed"));
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Signup validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const authData = await AuthService.signupUser(parseResult.data);
@@ -69,9 +72,11 @@ export const AuthHandler = {
       const parseResult = loginSchema.safeParse(req.body);
 
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(new ApiResponse(400, null, "Login Validation failed"));
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Login validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const authData = await AuthService.loginUser(parseResult.data);
@@ -124,18 +129,16 @@ export const AuthHandler = {
 
       setTokenCookies(res, tokens.accessToken, tokens.refreshToken);
 
-      return res
-        .status(200)
-        .json(
-          new ApiResponse(
-            200,
-            {
-              accessToken: tokens.accessToken,
-              refreshToken: tokens.refreshToken,
-            },
-            "Token refreshed successfully",
-          ),
-        );
+      return res.status(200).json(
+        new ApiResponse(
+          200,
+          {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+          },
+          "Token refreshed successfully",
+        ),
+      );
     } catch (error) {
       clearTokenCookies(res);
       next(error);

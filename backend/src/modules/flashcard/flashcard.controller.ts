@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { formatZodError } from "../../utils/formatZodError.js";
 import { flashcardService } from "./flashcard.service.js";
 import {
   createFlashcardSchema,
@@ -24,11 +25,11 @@ export const flashcardHandler = {
 
       const parseResult = createFlashcardSchema.safeParse(req.body);
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, null, "Flashcard Creation Validation failed"),
-          );
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Flashcard creation validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const flashcard = await flashcardService.createFlashcard(
@@ -60,11 +61,11 @@ export const flashcardHandler = {
 
       const parseResult = updateFlashcardSchema.safeParse(req.body);
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, null, "Flashcard Update Validation failed"),
-          );
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Flashcard update validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const flashcard = await flashcardService.updateFlashcard(
@@ -120,11 +121,11 @@ export const flashcardHandler = {
 
       const parseResult = reviewFlashcardSchema.safeParse(req.body);
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, null, "Flashcard Review Validation failed"),
-          );
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Flashcard review validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const result = await flashcardService.reviewFlashcard(

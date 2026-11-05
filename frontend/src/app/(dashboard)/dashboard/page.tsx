@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { WifiOff, RefreshCw } from "lucide-react";
+import { WifiOff, RefreshCw, FolderPlus } from "lucide-react";
 import { useDashboardKits } from "@/hooks/use-dashboard-kits";
 import {
   DashboardTopNav,
@@ -90,7 +90,19 @@ export default function DashboardPage() {
             </div>
           )
         ) : (
-          <KitCard />
+          <div className="col-span-full py-16 px-6 flex flex-col items-center justify-center gap-3 text-center rounded-2xl border border-white/10 bg-white/2 backdrop-blur-sm">
+            <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 text-white/40 mb-1">
+              <FolderPlus className="size-6 text-white/40" />
+            </div>
+            <div className="space-y-1 max-w-sm">
+              <h3 className="text-base sm:text-lg font-semibold text-white">
+                No kit created
+              </h3>
+              <p className="text-xs sm:text-sm text-white/50 leading-relaxed">
+                You haven&apos;t created any interview kits yet. Click above to create your first one.
+              </p>
+            </div>
+          </div>
         )}
       </div>
 

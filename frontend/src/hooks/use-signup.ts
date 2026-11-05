@@ -32,21 +32,6 @@ export function useSignup() {
     const trimmedEmail = formData.email.trim();
     const { password } = formData;
 
-    if (!trimmedUsername || !trimmedEmail || !password) {
-      setError("Please fill in all required fields.");
-      return;
-    }
-
-    if (trimmedUsername.length < 3) {
-      setError("Username must be at least 3 characters long.");
-      return;
-    }
-
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
-      return;
-    }
-
     try {
       setIsLoading(true);
       const res = await authService.signup({
