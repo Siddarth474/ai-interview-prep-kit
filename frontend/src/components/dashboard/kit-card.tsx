@@ -26,24 +26,11 @@ import { useRouter } from "next/navigation";
 import { notify } from "@/lib/notification";
 
 interface KitCardProps {
-  kit?: KitData;
+  kit: KitData;
   onOpen?: (kit: KitData) => void;
   onDelete?: (id: string) => void;
   onViewProgress?: (kit: KitData) => void;
 }
-
-const defaultPlaceholderKit: KitData = {
-  id: "kit-1",
-  company: "Google",
-  role: "Software Engineer Intern",
-  createdDate: "12 Aug 2025",
-  progress: 65,
-  questionsCount: 48,
-  flashcardsCount: 32,
-  daysCount: 14,
-  daysAvailable: 14,
-  status: "COMPLETED",
-};
 
 function getCompanyName(kit: KitData): string {
   if (kit.company && kit.company.trim()) return kit.company.trim();
@@ -126,7 +113,7 @@ function getStatusBadgeConfig(status?: string) {
 }
 
 export function KitCard({
-  kit = defaultPlaceholderKit,
+  kit,
   onOpen,
   onDelete,
   onViewProgress,
@@ -233,7 +220,7 @@ export function KitCard({
                     "flex-1 min-w-0",
                     !isRoleExpanded
                       ? "truncate"
-                      : "break-words whitespace-normal leading-relaxed text-white/80"
+                      : "wrap-break-words whitespace-normal leading-relaxed text-white/80"
                   )}
                 >
                   {jobRole}

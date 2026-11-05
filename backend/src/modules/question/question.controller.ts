@@ -1,6 +1,7 @@
 import type { Request, Response, NextFunction } from "express";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { formatZodError } from "../../utils/formatZodError.js";
 import { questionService } from "./question.service.js";
 import {
   createQuestionSchema,
@@ -25,11 +26,11 @@ export const questionHandler = {
 
       const parseResult = createQuestionSchema.safeParse(req.body);
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, null, "Question Creation Validation failed"),
-          );
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Question creation validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const question = await questionService.createQuestion(
@@ -61,11 +62,11 @@ export const questionHandler = {
 
       const parseResult = updateQuestionSchema.safeParse(req.body);
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, null, "Question Update Validation failed"),
-          );
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Question update validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const question = await questionService.updateQuestion(
@@ -121,11 +122,11 @@ export const questionHandler = {
 
       const parseResult = reorderQuestionsSchema.safeParse(req.body);
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, null, "Question Reorder Validation failed"),
-          );
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Question reorder validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const questions = await questionService.reorderQuestions(
@@ -159,11 +160,11 @@ export const questionHandler = {
       const parseResult = questionCategoryParamSchema.safeParse(normalizedCategory);
 
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(400, null, "Invalid question category"),
-          );
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Invalid question category",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const questions = await questionService.regenerateCategory(

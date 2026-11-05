@@ -37,12 +37,12 @@ export function useDashboardKits() {
           if (axios.isAxiosError(error)) {
             if (!error.response) {
               setServerError(
-                "Backend server is currently unreachable. Please ensure the backend is running on http://localhost:5000."
+                "Backend server is currently unreachable."
               );
             } else if (error.response.status >= 500) {
               const data = error.response.data as { message?: string } | undefined;
               setServerError(
-                data?.message || "Internal server error (500) occurred on backend."
+                data?.message || "Internal server error."
               );
             } else {
               const data = error.response.data as { message?: string } | undefined;

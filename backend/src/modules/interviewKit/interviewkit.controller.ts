@@ -2,6 +2,7 @@ import type { Request, Response, NextFunction } from "express";
 import { createKitSchema, deleteKitParamSchema } from "./interviewkit.schema.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
+import { formatZodError } from "../../utils/formatZodError.js";
 import { interviewKitService } from "./interviewkit.service.js";
 
 export const InterviewKitHandler = {
@@ -15,9 +16,11 @@ export const InterviewKitHandler = {
       const parseResult = createKitSchema.safeParse(req.body);
 
       if (!parseResult.success) {
-        return res
-          .status(400)
-          .json(new ApiResponse(400, null, "Kit Creation Validation failed"));
+        const { message, errors } = formatZodError(
+          parseResult.error,
+          "Kit creation validation failed",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const kit = await interviewKitService.createKit(userId, parseResult.data);
@@ -82,15 +85,11 @@ export const InterviewKitHandler = {
 
       const parseParams = deleteKitParamSchema.safeParse(req.params);
       if (!parseParams.success) {
-        return res
-          .status(400)
-          .json(
-            new ApiResponse(
-              400,
-              null,
-              parseParams.error.issues[0]?.message || "Invalid kit ID",
-            ),
-          );
+        const { message, errors } = formatZodError(
+          parseParams.error,
+          "Invalid kit ID",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
       }
 
       const { kitId } = parseParams.data;

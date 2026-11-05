@@ -174,7 +174,7 @@ export function KitCompanyBrief({ kit }: KitCompanyBriefProps) {
               {brief.industry ? (
                 <Badge
                   variant="outline"
-                  className="rounded-full border-white/15 bg-white/5 text-white/80 text-xs px-2.5 py-0.5"
+                  className="h-auto max-w-full whitespace-normal text-left wrap-break-words rounded-full border-white/15 bg-white/5 text-white/80 text-xs px-2.5 py-0.5"
                 >
                   {brief.industry}
                 </Badge>
@@ -285,7 +285,7 @@ export function KitCompanyBrief({ kit }: KitCompanyBriefProps) {
                       {prod.targetUsers ? (
                         <Badge
                           variant="outline"
-                          className="h-auto max-w-full whitespace-normal text-left text-[11px] border-white/10 bg-white/5 text-white/60 leading-tight py-1 px-2.5 rounded-md wrap-break-word shrink-0 sm:shrink"
+                          className="h-auto max-w-full whitespace-normal text-left text-[11px] border-white/10 bg-white/5 text-white/60 leading-tight py-1 px-2.5 rounded-md wrap-break-words shrink-0 sm:shrink"
                         >
                           {prod.targetUsers}
                         </Badge>
@@ -307,12 +307,12 @@ export function KitCompanyBrief({ kit }: KitCompanyBriefProps) {
                 <Cpu className="size-3.5 text-white/60" />
                 <span>Key Technologies & Architecture:</span>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 {products.techHighlights.map((tech, idx) => (
                   <Badge
                     key={idx}
                     variant="outline"
-                    className="rounded-lg border-white/10 bg-white/5 text-white/80 text-xs px-2.5 py-1"
+                    className="h-auto max-w-full whitespace-normal text-left wrap-break-words rounded-lg border-white/10 bg-white/5 text-white/80 text-[11px] sm:text-xs px-2.5 py-1 leading-snug"
                   >
                     {tech}
                   </Badge>
