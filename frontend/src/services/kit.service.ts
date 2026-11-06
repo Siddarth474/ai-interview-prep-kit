@@ -186,6 +186,11 @@ export const kitService = {
     return response.data;
   },
 
+  async retryKit(kitId: string): Promise<ApiResponse<KitData>> {
+    const response = await api.post<ApiResponse<KitData>>(`/kits/${kitId}/retry`);
+    return response.data;
+  },
+
   async toggleDayCompletion(
     kitId: string,
     dayNumber: number,

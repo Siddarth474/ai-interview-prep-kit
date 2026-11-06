@@ -25,3 +25,27 @@ export const createKitLimiter = rateLimit({
       );
   },
 });
+
+export const retryKitLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  limit: 6,
+  standardHeaders: "draft-7",
+  legacyHeaders: false,
+  keyGenerator: (req: Request): string => {
+    if (req.user?.userId) {
+      return req.user.userId;
+    }
+    return ipKeyGenerator(req.ip || "127.0.0.1");
+  },
+  handler: (_req: Request, res: Response) => {
+    return res
+      .status(429)
+      .json(
+        new ApiResponse(
+          429,
+          null,
+          "You have reached the kit retry limit (maximum 6 retries per 10 minutes). Please wait before retrying again.",
+        ),
+      );
+  },
+});

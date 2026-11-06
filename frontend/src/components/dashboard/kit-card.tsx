@@ -10,6 +10,7 @@ import {
   Trash2,
   Loader2,
   Briefcase,
+  RotateCcw,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import {
@@ -30,6 +31,7 @@ interface KitCardProps {
   onOpen?: (kit: KitData) => void;
   onDelete?: (id: string) => void;
   onViewProgress?: (kit: KitData) => void;
+  onRetry?: (kit: KitData) => void;
 }
 
 function getCompanyName(kit: KitData): string {
@@ -117,6 +119,7 @@ export function KitCard({
   onOpen,
   onDelete,
   onViewProgress,
+  onRetry,
 }: KitCardProps) {
   
   const company = getCompanyName(kit);
@@ -281,6 +284,22 @@ export function KitCard({
                   <ExternalLink className="size-3.5" />
                   <span>{isReady ? "Open Kit" : "View Progress"}</span>
                 </DropdownMenuItem>
+                {currentStatus === "FAILED" && (
+                  <DropdownMenuItem
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onRetry) {
+                        onRetry(kit);
+                      } else if (onViewProgress) {
+                        onViewProgress(kit);
+                      }
+                    }}
+                    className="flex items-center gap-2 px-2.5 py-1.5 text-xs text-amber-300 hover:text-amber-200 hover:bg-amber-500/10 focus:text-amber-200 focus:bg-amber-500/10 rounded-lg cursor-pointer transition-colors"
+                  >
+                    <RotateCcw className="size-3.5" />
+                    <span>Retry Generation</span>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator className="bg-white/10 my-1" />
                 <DropdownMenuItem
                   onClick={handleDeleteKit}

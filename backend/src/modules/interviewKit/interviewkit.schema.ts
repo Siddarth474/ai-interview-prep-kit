@@ -13,4 +13,10 @@ export const deleteKitParamSchema = z.object({
 });
 
 export type DeleteKitParams = z.infer<typeof deleteKitParamSchema>;
+
+export const retryKitParamSchema = z.object({
+  kitId: z.string().min(1, "Kit ID is required"),
+});
+
+export type RetryKitParams = z.infer<typeof retryKitParamSchema>;
  

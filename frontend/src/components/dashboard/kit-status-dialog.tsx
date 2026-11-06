@@ -7,6 +7,7 @@ import {
   Sparkles,
   AlertCircle,
   ArrowRight,
+  RotateCcw,
 } from "lucide-react";
 import {
   Dialog,
@@ -25,6 +26,7 @@ interface KitStatusDialogProps {
   kitId: string | null;
   initialKit?: KitData | null;
   onKitReady?: (kit: KitData) => void;
+  onKitUpdated?: (kit: KitData) => void;
   onOpenKit?: (kitId: string) => void;
 }
 
@@ -41,6 +43,7 @@ export function KitStatusDialog({
   kitId,
   initialKit,
   onKitReady,
+  onKitUpdated,
   onOpenKit,
 }: KitStatusDialogProps) {
   const [kit, setKit] = useState<KitData | null>(initialKit || null);
@@ -51,12 +54,16 @@ export function KitStatusDialog({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [prevKitId, setPrevKitId] = useState<string | null>(kitId);
   const [prevOpen, setPrevOpen] = useState(open);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [pollTrigger, setPollTrigger] = useState(0);
 
   const pollTimerRef = useRef<NodeJS.Timeout | null>(null);
   const onKitReadyRef = useRef(onKitReady);
+  const onKitUpdatedRef = useRef(onKitUpdated);
 
   useEffect(() => {
     onKitReadyRef.current = onKitReady;
+    onKitUpdatedRef.current = onKitUpdated;
   });
 
   // Adjust state when dialog is opened or kitId changes (official React pattern)
@@ -75,6 +82,35 @@ export function KitStatusDialog({
     if (pollTimerRef.current) {
       clearInterval(pollTimerRef.current);
       pollTimerRef.current = null;
+    }
+  };
+
+  const handleRetry = async () => {
+    if (!kitId || isRetrying) return;
+    setIsRetrying(true);
+    setErrorMessage(null);
+
+    try {
+      const res = await kitService.retryKit(kitId);
+      if (res.success && res.data) {
+        const updated = res.data;
+        setKit(updated);
+        setStatus("CREATED");
+        setProgress(25);
+        onKitUpdatedRef.current?.(updated);
+        setPollTrigger((prev) => prev + 1);
+      } else {
+        setErrorMessage(
+          res.message || "Failed to restart generation. Please try again.",
+        );
+      }
+    } catch (err: unknown) {
+      console.error("Failed to retry kit:", err);
+      setErrorMessage(
+        "AI service was temporarily at capacity. Please try again in a moment.",
+      );
+    } finally {
+      setIsRetrying(false);
     }
   };
 
@@ -106,7 +142,7 @@ export function KitStatusDialog({
           } else if (currentStatus === "FAILED") {
             stopPolling();
             setErrorMessage(
-              "Interview kit generation failed. Please try again.",
+              "AI service was temporarily at capacity. Spikes in demand are temporary.",
             );
           } else if (currentStatus === "GENERATING") {
             setProgress((prev) => Math.max(prev, 75));
@@ -132,7 +168,7 @@ export function KitStatusDialog({
       isSubscribed = false;
       stopPolling();
     };
-  }, [open, kitId]);
+  }, [open, kitId, pollTrigger]);
 
   const isCompleted = status === "COMPLETED" || progress === 100;
   const isFailed = status === "FAILED" || !!errorMessage;
@@ -229,13 +265,28 @@ export function KitStatusDialog({
               <ArrowRight className="size-4" />
             </Button>
           ) : isFailed ? (
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="w-full border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs sm:text-sm h-10 cursor-pointer"
-            >
-              Close
-            </Button>
+            <div className="flex flex-col-reverse sm:flex-row items-center gap-2 w-full">
+              <Button
+                variant="outline"
+                disabled={isRetrying}
+                onClick={() => onOpenChange(false)}
+                className="w-full sm:w-1/3 border-white/10 bg-white/5 hover:bg-white/10 text-white rounded-xl text-xs sm:text-sm h-10 cursor-pointer"
+              >
+                Close
+              </Button>
+              <Button
+                onClick={handleRetry}
+                disabled={isRetrying}
+                className="w-full sm:w-2/3 bg-white hover:bg-white/90 text-black font-semibold rounded-xl text-xs sm:text-sm h-10 shadow-sm transition-all flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {isRetrying ? (
+                  <Loader2 className="size-4 animate-spin text-black" />
+                ) : (
+                  <RotateCcw className="size-4 text-black" />
+                )}
+                <span>{isRetrying ? "Restarting..." : "Retry Generation"}</span>
+              </Button>
+            </div>
           ) : (
             <Button
               variant="outline"

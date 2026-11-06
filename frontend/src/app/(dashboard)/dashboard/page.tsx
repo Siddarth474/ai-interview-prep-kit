@@ -28,6 +28,8 @@ export default function DashboardPage() {
     filteredKits,
     handleKitCreated,
     handleKitReady,
+    handleKitUpdated,
+    handleRetryKit,
     handleDeleteKit,
     handleCardClick,
     handleOpenKit,
@@ -81,6 +83,7 @@ export default function DashboardPage() {
                 kit={kit}
                 onOpen={handleCardClick}
                 onViewProgress={handleCardClick}
+                onRetry={handleRetryKit}
                 onDelete={handleDeleteKit}
               />
             ))
@@ -118,6 +121,7 @@ export default function DashboardPage() {
         kitId={activeKitId}
         initialKit={activeKit}
         onKitReady={handleKitReady}
+        onKitUpdated={handleKitUpdated}
         onOpenKit={handleOpenKit}
       />
     </div>

@@ -119,6 +119,24 @@ export function useDashboardKits() {
     );
   };
 
+  const handleKitUpdated = (updatedKit: KitData) => {
+    setKits((prev) =>
+      prev.map((kit) =>
+        kit.id === updatedKit.id ? { ...kit, ...updatedKit } : kit
+      )
+    );
+    if (activeKitId === updatedKit.id) {
+      setActiveKit(updatedKit);
+    }
+  };
+
+  const handleRetryKit = (kit: KitData) => {
+    if (!kit.id) return;
+    setActiveKitId(kit.id);
+    setActiveKit(kit);
+    setIsStatusOpen(true);
+  };
+
   const handleDeleteKit = (id: string) => {
     setKits((prev) => prev.filter((kit) => kit.id !== id));
   };
@@ -208,6 +226,8 @@ export function useDashboardKits() {
     filteredKits,
     handleKitCreated,
     handleKitReady,
+    handleKitUpdated,
+    handleRetryKit,
     handleDeleteKit,
     handleCardClick,
     handleOpenKit,

@@ -3,7 +3,7 @@ import { ApiError } from "../../utils/ApiError.js";
 import type { Prisma } from "../../../generated/prisma/client.js";
 import { researchQueue } from "../../config/queue.js";
 import type { CreateKitInput } from "./interviewkit.schema.js";
-import type { KitStatus } from "../../../generated/prisma/enums.js";
+import { KitStatus } from "../../../generated/prisma/enums.js";
 import { studyScheduleService } from "../studySchedule/studySchedule.service.js";
 
 export const interviewKitService = {
@@ -264,6 +264,72 @@ export const interviewKitService = {
     });
 
     return { deleted: true };
+  },
+
+  async retryKit(kitId: string, userId: string) {
+    const existing = await prisma.interviewKit.findUnique({
+      where: { id: kitId },
+    });
+
+    if (!existing) {
+      throw new ApiError("Interview kit not found", 404, "KIT_NOT_FOUND");
+    }
+
+    if (existing.userId !== userId) {
+      throw new ApiError(
+        "You do not have access to this kit",
+        403,
+        "KIT_FORBIDDEN",
+      );
+    }
+
+    if (existing.status === KitStatus.COMPLETED) {
+      throw new ApiError(
+        "Interview kit is already completed and cannot be retried",
+        400,
+        "KIT_ALREADY_COMPLETED",
+      );
+    }
+
+    // Atomically purge partial child data to guarantee clean re-generation
+    const updatedKit = await prisma.$transaction(async (tx) => {
+      await tx.flashcard.deleteMany({ where: { kitId } });
+      await tx.studySchedule.deleteMany({ where: { kitId } });
+      await tx.question.deleteMany({ where: { kitId } });
+      await tx.requirement.deleteMany({ where: { kitId } });
+      await tx.companyBrief.deleteMany({ where: { kitId } });
+      await tx.roleBreakdown.deleteMany({ where: { kitId } });
+      await tx.researchSource.deleteMany({ where: { kitId } });
+
+      return await tx.interviewKit.update({
+        where: { id: kitId },
+        data: {
+          status: KitStatus.CREATED,
+        },
+      });
+    });
+
+    // Remove existing BullMQ job if present to avoid duplicate jobId conflicts
+    try {
+      const existingJob = await researchQueue.getJob(`generate-kit-${kitId}`);
+      if (existingJob) {
+        await existingJob.remove();
+      }
+    } catch (queueErr) {
+      console.warn(
+        `[InterviewKitService] Stale job cleanup failed for kit ${kitId}:`,
+        queueErr,
+      );
+    }
+
+    // Re-enqueue the generation job
+    await researchQueue.add(
+      "research-crawl",
+      { kitId },
+      { jobId: `generate-kit-${kitId}` },
+    );
+
+    return updatedKit;
   },
 
   async updateKitStatus(
