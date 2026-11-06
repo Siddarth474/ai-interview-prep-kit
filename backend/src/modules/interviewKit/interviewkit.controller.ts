@@ -1,5 +1,9 @@
 import type { Request, Response, NextFunction } from "express";
-import { createKitSchema, deleteKitParamSchema } from "./interviewkit.schema.js";
+import {
+  createKitSchema,
+  deleteKitParamSchema,
+  retryKitParamSchema,
+} from "./interviewkit.schema.js";
 import { ApiError } from "../../utils/ApiError.js";
 import { ApiResponse } from "../../utils/ApiResponse.js";
 import { formatZodError } from "../../utils/formatZodError.js";
@@ -98,6 +102,43 @@ export const InterviewKitHandler = {
       return res
         .status(200)
         .json(new ApiResponse(200, result, "Interview kit deleted successfully"));
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  async retryKitHandler(
+    req: Request<{ kitId: string }>,
+    res: Response,
+    next: NextFunction,
+  ) {
+    try {
+      const userId = req.user?.userId;
+      if (!userId) {
+        throw new ApiError("Authentication required", 401, "NO_USER");
+      }
+
+      const parseParams = retryKitParamSchema.safeParse(req.params);
+      if (!parseParams.success) {
+        const { message, errors } = formatZodError(
+          parseParams.error,
+          "Invalid kit ID",
+        );
+        return res.status(400).json(new ApiResponse(400, { errors }, message));
+      }
+
+      const { kitId } = parseParams.data;
+      const kit = await interviewKitService.retryKit(kitId, userId);
+
+      return res
+        .status(200)
+        .json(
+          new ApiResponse(
+            200,
+            kit,
+            "Interview kit generation restarted successfully",
+          ),
+        );
     } catch (error) {
       next(error);
     }

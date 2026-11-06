@@ -10,7 +10,7 @@ export const researchQueue = new Queue<InterviewKitJobData>(
   {
     connection: redis,
     defaultJobOptions: {
-      attempts: 2,
+      attempts: 5,
       backoff: {
         type: "exponential",
         delay: 5000,
