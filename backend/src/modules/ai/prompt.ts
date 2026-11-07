@@ -1,10 +1,13 @@
 export function buildRequirementPrompt(jd: string) {
   return `
-Extract the meaningful interview-relevant requirements
-from the following job description.
+You are an expert technical recruiter and engineering hiring manager analyzing a job description.
 
+FIRST: Validate whether the input text represents a legitimate job posting, role specification, or professional job description.
+- Set isValidJobDescription to true if the text genuinely describes a job role, engineering responsibilities, skills, or hiring criteria.
+- Set isValidJobDescription to false if the text is unrelated content (e.g. spam, a blog story, a recipe, casual conversation, code snippet without context, or gibberish). Provide a concise rejectionReason explaining why.
+
+SECOND: If isValidJobDescription is true, extract the meaningful interview-relevant requirements.
 For each requirement return:
-
 - text: the original requirement in concise form
 - topic: the skill/topic involved
 - category:
@@ -17,8 +20,8 @@ For each requirement return:
   MEDIUM
   HIGH
 
-Do not invent requirements that are not supported
-by the job description.
+Do not invent requirements that are not supported by the job description.
+If isValidJobDescription is false, return an empty requirements array.
 
 JOB DESCRIPTION:
 ${jd}

@@ -32,6 +32,8 @@ import KitLoading from "../../loading";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { UpdateQuestionDialog } from "@/components/question/update-question-dialog";
 import { DeleteQuestionDialog } from "@/components/question/delete-question-dialog";
+import { GuidanceContent } from "@/components/question/guidance-content";
+import { AnswerContent } from "@/components/question/answer-content";
 
 interface QuestionItem {
   id?: string;
@@ -462,25 +464,15 @@ export default function QuestionDetailPage() {
         {/* Content Box */}
         <Card className="rounded-2xl rounded-tl-none border border-white/10 bg-[#0d1010] p-6 sm:p-7 shadow-xl min-h-60 sm:min-h-70">
           <TabsContent value="answer" className="mt-0 outline-none">
-            <div className="min-h-35 max-h-100 overflow-y-auto pr-2 text-sm sm:text-base text-white leading-relaxed font-normal whitespace-pre-wrap [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-              {currentQuestion.answer ? (
-                currentQuestion.answer
-              ) : (
-                <span className="text-white/40 italic">
-                  No model answer provided for this question.
-                </span>
-              )}
+            <div className="min-h-35 max-h-100 overflow-y-auto pr-2 text-sm sm:text-base text-white leading-relaxed font-normal [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+              <AnswerContent answer={currentQuestion.answer} />
             </div>
           </TabsContent>
 
           <TabsContent value="guidance" className="mt-0 outline-none">
             {/* Additional Guidance tab */}
-            <div className="min-h-35 max-h-100 overflow-y-auto pr-2 text-sm sm:text-base text-white leading-relaxed font-normal whitespace-pre-wrap [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
-              {currentQuestion.guidance || (
-                <span className="text-white/40 italic">
-                  No additional guidance provided for this question.
-                </span>
-              )}
+            <div className="min-h-35 max-h-100 overflow-y-auto pr-2 text-sm sm:text-base text-white leading-relaxed font-normal [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:bg-white/20 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-track]:bg-transparent">
+              <GuidanceContent guidance={currentQuestion.guidance} />
             </div>
           </TabsContent>
         </Card>

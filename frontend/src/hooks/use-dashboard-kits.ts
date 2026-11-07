@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import axios from "axios";
 import type { KitData } from "@/services/kit.service";
 import { kitService } from "@/services/kit.service";
+import { clearKitProgress } from "@/lib/kit-progress";
 
 export function useDashboardKits() {
   const router = useRouter();
@@ -138,6 +139,7 @@ export function useDashboardKits() {
   };
 
   const handleDeleteKit = (id: string) => {
+    clearKitProgress(id);
     setKits((prev) => prev.filter((kit) => kit.id !== id));
   };
 

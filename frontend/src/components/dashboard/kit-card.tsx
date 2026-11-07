@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { kitService, type KitData } from "@/services/kit.service";
 import { useRouter } from "next/navigation";
 import { notify } from "@/lib/notification";
+import { getSavedKitProgress } from "@/lib/kit-progress";
 
 interface KitCardProps {
   kit: KitData;
@@ -126,7 +127,6 @@ export function KitCard({
   const jobRole = getJobRole(kit);
   const createdDate = getFormattedDate(kit);
   const daysCount = kit.daysAvailable ?? 14;
-  const progress = kit.progress ?? 0;
   const questionsCount =
     kit.questionsCount ??
     (Array.isArray(kit.questions) ? kit.questions.length : 0);
@@ -139,6 +139,9 @@ export function KitCard({
     kit.status || (questionsCount > 0 ? "COMPLETED" : "CREATED");
   const isReady = currentStatus === "COMPLETED";
   const statusBadge = getStatusBadgeConfig(currentStatus);
+  const displayProgress = isReady
+    ? (kit.progress ?? 0)
+    : getSavedKitProgress(kit.id, currentStatus);
 
   const router = useRouter();
 
@@ -328,11 +331,11 @@ export function KitCard({
         <div className="h-1.5 flex-1 rounded-full bg-white/10 overflow-hidden">
           <div
             className="h-full rounded-full bg-white transition-all duration-300"
-            style={{ width: `${Math.min(100, Math.max(0, progress))}%` }}
+            style={{ width: `${Math.min(100, Math.max(0, displayProgress))}%` }}
           />
         </div>
         <span className="text-xs font-medium text-white/60 tabular-nums">
-          {progress}%
+          {displayProgress}%
         </span>
       </div>
 
