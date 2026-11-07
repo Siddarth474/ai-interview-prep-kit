@@ -19,6 +19,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { kitService, type KitData } from "@/services/kit.service";
+import {
+  getSavedKitProgress,
+  saveKitProgress,
+  clearKitProgress,
+} from "@/lib/kit-progress";
 
 interface KitStatusDialogProps {
   open: boolean;
@@ -28,13 +33,6 @@ interface KitStatusDialogProps {
   onKitReady?: (kit: KitData) => void;
   onKitUpdated?: (kit: KitData) => void;
   onOpenKit?: (kitId: string) => void;
-}
-
-function getInitialProgress(status?: string | null): number {
-  if (status === "COMPLETED") return 100;
-  if (status === "GENERATING") return 75;
-  if (status === "RESEARCHING") return 50;
-  return 25;
 }
 
 export function KitStatusDialog({
@@ -49,7 +47,7 @@ export function KitStatusDialog({
   const [kit, setKit] = useState<KitData | null>(initialKit || null);
   const [status, setStatus] = useState<string>(initialKit?.status || "CREATED");
   const [progress, setProgress] = useState<number>(() =>
-    getInitialProgress(initialKit?.status),
+    getSavedKitProgress(kitId, initialKit?.status),
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [prevKitId, setPrevKitId] = useState<string | null>(kitId);
@@ -71,8 +69,9 @@ export function KitStatusDialog({
     setPrevKitId(kitId);
     setPrevOpen(open);
     if (open) {
-      setStatus(initialKit?.status || "CREATED");
-      setProgress(getInitialProgress(initialKit?.status));
+      const currentStat = initialKit?.status || "CREATED";
+      setStatus(currentStat);
+      setProgress(getSavedKitProgress(kitId, currentStat));
       setErrorMessage(null);
       setKit(initialKit || null);
     }
@@ -94,9 +93,11 @@ export function KitStatusDialog({
       const res = await kitService.retryKit(kitId);
       if (res.success && res.data) {
         const updated = res.data;
+        clearKitProgress(kitId);
         setKit(updated);
         setStatus("CREATED");
         setProgress(25);
+        saveKitProgress(kitId, 25);
         onKitUpdatedRef.current?.(updated);
         setPollTrigger((prev) => prev + 1);
       } else {
@@ -137,6 +138,7 @@ export function KitStatusDialog({
 
           if (isReady) {
             setProgress(100);
+            clearKitProgress(kitId);
             stopPolling();
             onKitReadyRef.current?.(fetched);
           } else if (currentStatus === "FAILED") {
@@ -145,12 +147,24 @@ export function KitStatusDialog({
               "AI service was temporarily at capacity. Spikes in demand are temporary.",
             );
           } else if (currentStatus === "GENERATING") {
-            setProgress((prev) => Math.max(prev, 75));
+            setProgress((prev) => {
+              const next = Math.min(96, Math.max(75, prev < 75 ? 75 : prev + 3));
+              saveKitProgress(kitId, next);
+              return next;
+            });
           } else if (currentStatus === "RESEARCHING") {
-            setProgress((prev) => Math.max(prev, 50));
+            setProgress((prev) => {
+              const next = Math.min(70, Math.max(50, prev < 50 ? 50 : prev + 3));
+              saveKitProgress(kitId, next);
+              return next;
+            });
           } else {
             // Keep steady progression if still CREATED
-            setProgress((prev) => (prev < 45 ? prev + 5 : prev));
+            setProgress((prev) => {
+              const next = Math.min(45, Math.max(25, prev + 3));
+              saveKitProgress(kitId, next);
+              return next;
+            });
           }
         }
       } catch (err: unknown) {

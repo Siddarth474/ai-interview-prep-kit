@@ -1,4 +1,4 @@
-import { Worker } from "bullmq";
+import { Worker, UnrecoverableError } from "bullmq";
 import { redis, QUEUE_NAMES } from "../config/redis.js";
 import type { InterviewKitJobData } from "../config/queue.js";
 import { generationService } from "../modules/generation/generation.service.js";
@@ -13,7 +13,18 @@ const generationWorker = new Worker<InterviewKitJobData>(
       `[Worker] Processing research job ${job.id} (attempt ${attempt}) for kit: ${job.data.kitId}`,
     );
 
-    await generationService.generateKit(job.data.kitId);
+    try {
+      await generationService.generateKit(job.data.kitId);
+    } catch (error: unknown) {
+      const err = error as Error | undefined;
+      if (
+        err?.message?.includes("INVALID_JOB_DESCRIPTION") ||
+        err?.message?.includes("valid job description")
+      ) {
+        throw new UnrecoverableError(err.message);
+      }
+      throw error;
+    }
 
     console.log(`[Worker] Completed job ${job.id}`);
 
@@ -34,7 +45,13 @@ generationWorker.on("completed", (job) => {
 generationWorker.on("failed", async (job, error) => {
   const attemptsMade = job?.attemptsMade ?? 1;
   const maxAttempts = job?.opts?.attempts ?? 1;
-  const hasRetriesLeft = attemptsMade < maxAttempts;
+
+  const isNonRetryable =
+    error?.name === "UnrecoverableError" ||
+    error.message?.includes("INVALID_JOB_DESCRIPTION") ||
+    error.message?.includes("valid job description");
+
+  const hasRetriesLeft = !isNonRetryable && attemptsMade < maxAttempts;
 
   console.error(
     `[Worker] Job ${job?.id} attempt ${attemptsMade}/${maxAttempts} failed:`,
@@ -48,12 +65,12 @@ generationWorker.on("failed", async (job, error) => {
     return;
   }
 
-  // All retries exhausted -> mark kit as FAILED
+  // All retries exhausted or non-retryable error -> mark kit as FAILED
   if (job?.data?.kitId) {
     try {
       await interviewKitService.updateKitStatus(job.data.kitId, KitStatus.FAILED);
       console.log(
-        `[Worker] All retries exhausted. Marked kit ${job.data.kitId} as FAILED in DB`,
+        `[Worker] Marked kit ${job.data.kitId} as FAILED in DB (${isNonRetryable ? "Non-retryable input error" : "All retries exhausted"})`,
       );
     } catch (err) {
       console.error(`[Worker] Failed to update kit status to FAILED:`, err);

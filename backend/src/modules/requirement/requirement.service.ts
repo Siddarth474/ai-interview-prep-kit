@@ -1,5 +1,6 @@
 import { prisma } from "../../lib/prisma.js";
 import { aiService } from "../ai/ai.service.js";
+import { ApiError } from "../../utils/ApiError.js";
 
 export const requirementService = {
   async extractRequirements(kitId: string) {
@@ -13,9 +14,23 @@ export const requirementService = {
     if (!kit) {
       throw new Error("Interview kit not found");
     }
-    const requirements = await aiService.extractRequirements(
+    const extractionResult = await aiService.extractRequirements(
       kit.jobDescription,
     );
+
+    if (
+      !extractionResult.isValidJobDescription ||
+      !extractionResult.requirements ||
+      extractionResult.requirements.length === 0
+    ) {
+      const reason =
+        extractionResult.rejectionReason ||
+        "The provided text does not appear to be a valid job description.";
+      throw new ApiError(reason, 400, "INVALID_JOB_DESCRIPTION");
+    }
+
+    const { requirements } = extractionResult;
+
     // save requirements
     await prisma.requirement.createMany({
       data: requirements.map((requirement, index) => ({

@@ -216,6 +216,7 @@ cd AI-interview-prep-kit
    # Google Gemini API
    GEMINI_API_KEY="AIzaSy..."
    GEMINI_MODEL="gemini-3.5-flash-lite"
+   FALLBACK_MODEL="gemini-3.1-flash-lite"
    EMBEDDING_MODEL="gemini-embedding-002"
    ```
 

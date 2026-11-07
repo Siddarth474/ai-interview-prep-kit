@@ -44,34 +44,12 @@ export function useCreateKit({
     e.preventDefault();
     setError(null);
 
-    const trimmedUrl = kitData.companyUrl.trim();
-    const trimmedJd = kitData.jobDescription.trim();
-    const parsedDays = parseInt(kitData.daysAvailable, 10);
-
-    if (!trimmedUrl || !trimmedJd || !kitData.daysAvailable) {
-      setError("Please fill in all required fields.");
-      return;
-    }
-
-    // Basic URL check
-    try {
-      new URL(trimmedUrl);
-    } catch {
-      setError("Please enter a valid URL (e.g. https://google.com/careers).");
-      return;
-    }
-
-    if (isNaN(parsedDays) || parsedDays < 1) {
-      setError("Days available must be at least 1 day.");
-      return;
-    }
-
     try {
       setIsLoading(true);
       const payload: CreateKitPayload = {
-        companyUrl: trimmedUrl,
-        jobDescription: trimmedJd,
-        daysAvailable: parsedDays,
+        companyUrl: kitData.companyUrl.trim(),
+        jobDescription: kitData.jobDescription.trim(),
+        daysAvailable: Number(kitData.daysAvailable),
       };
 
       const res = await kitService.createKit(payload);
@@ -82,7 +60,6 @@ export function useCreateKit({
       } else {
         const errorMsg = res.message || "Failed to create kit. Please try again.";
         setError(errorMsg);
-        notify.error(errorMsg);
       }
     } catch (err: unknown) {
       const message =
@@ -90,7 +67,6 @@ export function useCreateKit({
           (err.response?.data as { message?: string } | undefined)?.message) ||
         "Failed to generate kit. Please check your inputs and try again.";
       setError(message);
-      notify.error(message);
     } finally {
       setIsLoading(false);
     }

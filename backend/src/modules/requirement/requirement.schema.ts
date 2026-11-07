@@ -25,9 +25,20 @@ const requirementItemSchema = z.object({
 });
 
 export const requirementOutputSchema = z.object({
+  isValidJobDescription: z
+    .boolean()
+    .describe(
+      "True if the input text represents a legitimate job posting, role specification, or job requirements. False if it is random text, spam, unrelated essays, recipes, or gibberish.",
+    ),
+  rejectionReason: z
+    .string()
+    .optional()
+    .describe(
+      "Short explanation if the text is not a valid job description (e.g. 'Text is an unrelated recipe, not a job description')",
+    ),
   requirements: z
     .array(requirementItemSchema)
-    .describe("List of extracted requirements from the job description"),
+    .describe("List of extracted requirements from the job description if valid, or empty array if invalid"),
 });
 
 export type Requirement = z.infer<typeof requirementItemSchema>;

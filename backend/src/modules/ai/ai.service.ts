@@ -52,13 +52,13 @@ export interface Input {
 export const aiService = {
   async extractRequirements(
     jobDescription: string,
-  ): Promise<RequirementOutput["requirements"]> {
+  ): Promise<RequirementOutput> {
     const result = await geminiProvider.generateStructuredContent(
       buildRequirementPrompt(jobDescription),
       requirementOutputSchema,
     );
 
-    return result.requirements;
+    return result;
   },
 
   async extractRoleBreakdown(
