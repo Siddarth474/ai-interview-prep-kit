@@ -35,6 +35,20 @@ function calculateWorkload(requirement: Requirement): number {
 
 export const studyScheduleService = {
   async createStudySchedule(kitId: string) {
+    const existingSchedule = await prisma.studySchedule.findFirst({
+      where: { kitId },
+      include: {
+        days: true,
+      },
+    });
+
+    if (existingSchedule && existingSchedule.days.length > 0) {
+      console.log(
+        `[StudySchedule] Kit ${kitId} already has a generated schedule with ${existingSchedule.days.length} days. Skipping duplicate creation.`,
+      );
+      return existingSchedule;
+    }
+
     const kit = await prisma.interviewKit.findUnique({
       where: { id: kitId },
     });

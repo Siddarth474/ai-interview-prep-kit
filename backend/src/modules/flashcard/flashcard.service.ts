@@ -10,6 +10,18 @@ import type {
 
 export const flashcardService = {
   async generateFlashcardsForKit(kitId: string) {
+    const existingCount = await prisma.flashcard.count({
+      where: { kitId },
+    });
+
+    if (existingCount > 0) {
+      console.log(
+        `[FlashcardService] Kit ${kitId} already has ${existingCount} flashcards. Skipping duplicate generation.`,
+      );
+      await interviewKitService.updateKitStatus(kitId, KitStatus.COMPLETED);
+      return;
+    }
+
     const questions = await prisma.question.findMany({
       where: { kitId },
       select: { question: true, guidance: true },
