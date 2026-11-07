@@ -10,10 +10,10 @@ export const researchQueue = new Queue<InterviewKitJobData>(
   {
     connection: redis,
     defaultJobOptions: {
-      attempts: 5,
+      attempts: 3,
       backoff: {
         type: "exponential",
-        delay: 5000,
+        delay: 8000,
       },
       removeOnComplete: {
         age: 3600,

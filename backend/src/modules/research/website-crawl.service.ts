@@ -50,13 +50,22 @@ function isSameDomain(startUrl: URL, targetUrl: string): boolean {
 }
 
 export const WebsiteCrawlerService = {
-  maxPages: 10, 
-  maxDepth: 3,
+  maxPages: 7,
+  maxDepth: 2,
 
   async crawl(startUrl: string) {
     const browser = await chromium.launch({
       headless: true,
-      channel: "chromium"
+      channel: "chromium",
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-gpu",
+        "--no-zygote",
+        "--single-process",
+        "--disable-extensions",
+      ],
     });
 
     try {
@@ -123,6 +132,15 @@ export const WebsiteCrawlerService = {
     const page = await browser.newPage();
 
     try {
+      // Abort non-text assets to prevent memory bloat on 512MB hosting
+      await page.route("**/*", (route) => {
+        const type = route.request().resourceType();
+        if (["image", "media", "font", "stylesheet", "other"].includes(type)) {
+          return route.abort();
+        }
+        route.continue();
+      });
+
       await page.goto(url, {
         waitUntil: "domcontentloaded",
         timeout: 15000,

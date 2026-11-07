@@ -4,6 +4,17 @@ import { ApiError } from "../../utils/ApiError.js";
 
 export const requirementService = {
   async extractRequirements(kitId: string) {
+    const existing = await prisma.requirement.findMany({
+      where: { kitId },
+      orderBy: { position: "asc" },
+    });
+    if (existing.length > 0) {
+      console.log(
+        `[RequirementService] Kit ${kitId} already has ${existing.length} requirements. Skipping duplicate extraction.`,
+      );
+      return existing;
+    }
+
     const kit = await prisma.interviewKit.findUnique({
       where: { id: kitId },
       select: {
@@ -31,18 +42,20 @@ export const requirementService = {
 
     const { requirements } = extractionResult;
 
-    // save requirements
-    await prisma.requirement.createMany({
-      data: requirements.map((requirement, index) => ({
-        kitId,
-        text: requirement.text,
-        topic: requirement.topic,
-        category: requirement.category,
-        importance: requirement.importance,
-        position: index + 1,
-      })),
+    await prisma.$transaction(async (tx) => {
+      await tx.requirement.deleteMany({ where: { kitId } });
+      await tx.requirement.createMany({
+        data: requirements.map((requirement, index) => ({
+          kitId,
+          text: requirement.text,
+          topic: requirement.topic,
+          category: requirement.category,
+          importance: requirement.importance,
+          position: index + 1,
+        })),
+      });
     });
-    //console.log("Requirements extracted successfully: ", requirements);
+
     return requirements;
   },
 

@@ -93,6 +93,16 @@ export const aiService = {
     const budgetMap = calculateBudget(requirements);
 
     for (const requirement of requirements) {
+      const existingCount = await prisma.question.count({
+        where: { requirementId: requirement.id },
+      });
+      if (existingCount > 0) {
+        console.log(
+          `[AI] Requirement ${requirement.id} already has ${existingCount} questions. Skipping duplicate generation.`,
+        );
+        continue;
+      }
+
       const key = `${requirement.importance}_${requirement.category}`;
       const count = budgetMap.get(key) || 1;
 
