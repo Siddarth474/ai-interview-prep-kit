@@ -30,25 +30,12 @@ const importanceWeight: Record<Importance, number> = {
 };
 
 function calculateWorkload(requirement: Requirement): number {
-  return importanceWeight[requirement.importance] * requirement.questionCount;
+  const effectiveQuestions = Math.max(1, requirement.questionCount || 0);
+  return importanceWeight[requirement.importance] * effectiveQuestions;
 }
 
 export const studyScheduleService = {
   async createStudySchedule(kitId: string) {
-    const existingSchedule = await prisma.studySchedule.findFirst({
-      where: { kitId },
-      include: {
-        days: true,
-      },
-    });
-
-    if (existingSchedule && existingSchedule.days.length > 0) {
-      console.log(
-        `[StudySchedule] Kit ${kitId} already has a generated schedule with ${existingSchedule.days.length} days. Skipping duplicate creation.`,
-      );
-      return existingSchedule;
-    }
-
     const kit = await prisma.interviewKit.findUnique({
       where: { id: kitId },
     });
@@ -69,8 +56,6 @@ export const studyScheduleService = {
       })),
       kit?.daysAvailable ?? 14,
     );
-
-    //console.log("Schedule: ", JSON.stringify(schedule, null, 2));
 
     await prisma.$transaction(async (tx) => {
       // Remove any existing schedule for this kit to ensure idempotency
@@ -100,7 +85,7 @@ export const studyScheduleService = {
               requirementId: topic.requirementId,
               topic: topic.topic,
               importance: topic.importance,
-              estimatedMinutes: topic.questionCount * 10,
+              estimatedMinutes: Math.max(30, (topic.questionCount || 2) * 15),
             },
           });
         }
@@ -217,27 +202,30 @@ function generateStudySchedule(
     return [];
   }
 
-  // Create all study days first
   const days: StudyDay[] = Array.from({ length: totalDays }, (_, index) => ({
     dayNumber: index + 1,
     topics: [],
     workload: 0,
   }));
 
-  // Calculate workload for every requirement
   const requirementsWithWorkload = requirements.map((requirement) => ({
     ...requirement,
     workload: calculateWorkload(requirement),
   }));
 
-  // Highest workload first
   requirementsWithWorkload.sort((a, b) => b.workload - a.workload);
 
-  // Assign each requirement to the least-loaded day
   for (const requirement of requirementsWithWorkload) {
-    const leastLoadedDay = days.reduce((least, current) =>
-      current.workload < least.workload ? current : least,
-    );
+    const leastLoadedDay = days.reduce((least, current) => {
+      if (current.workload < least.workload) return current;
+      if (
+        current.workload === least.workload &&
+        current.topics.length < least.topics.length
+      ) {
+        return current;
+      }
+      return least;
+    });
 
     leastLoadedDay.topics.push({
       requirementId: requirement.id,
