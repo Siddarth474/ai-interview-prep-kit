@@ -95,7 +95,11 @@ export const interviewKitService = {
     }
 
     let schedule = kit.studySchedule;
-    if (!schedule && kit.requirements.length > 0) {
+    if (
+      !schedule &&
+      kit.status === KitStatus.COMPLETED &&
+      kit.requirements.length > 0
+    ) {
       try {
         await studyScheduleService.createStudySchedule(kitId);
         schedule = await prisma.studySchedule.findUnique({
